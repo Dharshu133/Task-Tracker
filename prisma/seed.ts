@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -18,12 +18,14 @@ async function main() {
   console.log(`✅ Organization: ${org.name}`);
 
   // Admin user
-  // Pre-calculated hash for 'password123' (12 rounds)
-  const hashedSeedPassword = '$2a$12$LQv3c1yqBWVHxkd0LqCFS.Djg5yP6p3m.S3e/9T0lV9f9.mG.qY.q';
+  const password = 'password123';
+  const hashedSeedPassword = await bcrypt.hash(password, 12);
   
   const admin = await prisma.user.upsert({
     where: { email: 'admin@acme.com' },
-    update: {},
+    update: {
+      password: hashedSeedPassword,
+    },
     create: {
       email: 'admin@acme.com',
       password: hashedSeedPassword,
@@ -36,7 +38,9 @@ async function main() {
   // Member user
   const member = await prisma.user.upsert({
     where: { email: 'member@acme.com' },
-    update: {},
+    update: {
+      password: hashedSeedPassword,
+    },
     create: {
       email: 'member@acme.com',
       password: hashedSeedPassword,

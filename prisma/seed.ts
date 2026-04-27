@@ -42,7 +42,6 @@ async function main() {
       password: hashedSeedPassword,
       role: 'MEMBER',
       orgId: org.id,
-      assignedProjectId: 'proj-001',
     },
   });
 

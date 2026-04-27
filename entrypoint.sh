@@ -1,15 +1,16 @@
 #!/bin/sh
 set -e
 
-# Run migrations using global Prisma binary
-echo "Running prisma migrate deploy..."
-prisma migrate deploy
+echo "Running database migrations..."
+npx prisma db push --accept-data-loss
 
-# Seed the database using the compiled script
-echo "Seeding database..."
-node prisma/seed.js
+echo "Seeding admin account..."
+npx prisma db seed
 
-
-# Start the application
 echo "Starting application..."
-node server.js
+
+export HOSTNAME=0.0.0.0
+export HOST=0.0.0.0
+export PORT=3000
+
+exec node server.js

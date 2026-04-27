@@ -42,10 +42,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
-# Install Prisma CLI globally for migration and seeding
-RUN npm install -g prisma@5.22.0
-
-
 
 # Copy entrypoint script
 COPY --chown=nextjs:nodejs entrypoint.sh ./

@@ -2,10 +2,11 @@
 set -e
 
 echo "Running database migrations..."
-npx --no-install prisma db push --accept-data-loss
+./node_modules/.bin/prisma db push --accept-data-loss
 
 echo "Seeding admin account..."
-npx --no-install prisma db seed
+# Use the compiled seed.js instead of ts-node which is not available in production
+node prisma/seed.js
 
 echo "Starting application..."
 

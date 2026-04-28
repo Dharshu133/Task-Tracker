@@ -87,11 +87,11 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
     >
       <div className="glass-card w-full max-w-lg shadow-2xl shadow-black/50 animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700">
-          <h2 className="text-lg font-semibold text-white">Add New Task</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-300 dark:border-slate-700">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Add New Task</h2>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-500 hover:text-slate-300 hover:bg-slate-700 rounded-lg transition-colors"
+            className="p-1.5 text-slate-500 hover:text-slate-700 dark:text-slate-300 hover:bg-slate-700 rounded-lg transition-colors"
             aria-label="Close modal"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -153,7 +153,7 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
             >
               {projects.length === 0 && <option value="">No projects available</option>}
               {projects.map((p) => (
-                <option key={p.id} value={p.id} className="bg-slate-900">{p.name}</option>
+                <option key={p.id} value={p.id} className="bg-white dark:bg-slate-900">{p.name}</option>
               ))}
             </select>
           </div>
@@ -168,9 +168,9 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
               className="select-field"
               disabled={loading}
             >
-              <option value="" className="bg-slate-900">Unassigned</option>
+              <option value="" className="bg-white dark:bg-slate-900">Unassigned</option>
               {filteredUsers.map((u) => (
-                <option key={u.id} value={u.id} className="bg-slate-900">@{u.email.split('@')[0]} ({u.email})</option>
+                <option key={u.id} value={u.id} className="bg-white dark:bg-slate-900">@{u.email.split('@')[0]} ({u.email})</option>
               ))}
             </select>
           </div>

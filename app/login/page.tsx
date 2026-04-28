@@ -43,7 +43,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 relative overflow-hidden">
       {/* Background gradient blobs */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-brand-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -56,8 +56,8 @@ export default function LoginPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Task Tracker</h1>
-          <p className="text-slate-400 mt-2 text-sm">Sign in to your workspace</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Task Tracker</h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-2 text-sm">Sign in to your workspace</p>
         </div>
 
         {/* Card */}
@@ -127,7 +127,7 @@ export default function LoginPage() {
         </div>
 
         {/* Demo hint */}
-        <p className="text-center text-slate-600 text-xs mt-6">
+        <p className="text-center text-slate-500 dark:text-slate-400 text-xs mt-6">
           Use seeded credentials: <span className="text-slate-500">admin@acme.com / password123</span>
         </p>
       </div>

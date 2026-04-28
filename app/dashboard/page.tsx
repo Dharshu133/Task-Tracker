@@ -200,7 +200,7 @@ export default function DashboardPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
       <Header user={user} onMenuToggle={() => setSidebarOpen((o) => !o)} />
 
       <div className="flex flex-1 overflow-hidden">
@@ -220,7 +220,7 @@ export default function DashboardPage() {
           {/* Page header */}
           <div className="flex items-start sm:items-center justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-white">{activeProjectName}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">{activeProjectName}</h1>
               <p className="text-slate-500 text-sm mt-0.5">
                 {activeProjectId === ('USERS_VIEW' as any)
                   ? `Manage the ${orgUsers.length} users in your organization`
@@ -269,10 +269,10 @@ export default function DashboardPage() {
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-                  <div className="h-4 w-24 bg-slate-800 rounded animate-pulse mb-4" />
+                <div key={i} className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 p-4">
+                  <div className="h-4 w-24 bg-slate-100 dark:bg-slate-800 rounded animate-pulse mb-4" />
                   {[0, 1, 2].map((j) => (
-                    <div key={j} className="h-20 bg-slate-800/60 rounded-xl mb-3 animate-pulse" />
+                    <div key={j} className="h-20 bg-slate-100 dark:bg-slate-800/60 rounded-xl mb-3 animate-pulse" />
                   ))}
                 </div>
               ))}
@@ -281,21 +281,21 @@ export default function DashboardPage() {
             <div className="glass-card overflow-hidden">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 bg-slate-900/50">
-                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">User</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Role</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">User</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
                   {orgUsers.map((u) => (
-                    <tr key={u.id} className="hover:bg-slate-900/30 transition-colors">
+                    <tr key={u.id} className="hover:bg-white dark:bg-slate-900/30 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-brand-600/20 flex items-center justify-center text-brand-400 font-bold text-xs">
                             {u.email[0].toUpperCase()}
                           </div>
-                          <span className="text-white font-medium">{u.email}</span>
+                          <span className="text-slate-900 dark:text-white font-medium">{u.email}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -306,7 +306,7 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="flex items-center gap-1.5 text-xs text-slate-400">
+                        <span className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                           Active
                         </span>

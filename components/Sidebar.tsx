@@ -1,5 +1,8 @@
 'use client';
 
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
+
 interface Project {
   id: string;
   name: string;
@@ -27,6 +30,10 @@ export default function Sidebar({
   onDeleteProject,
 }: SidebarProps) {
   const isAdmin = userRole === 'ADMIN';
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   return (
     <>
@@ -41,13 +48,13 @@ export default function Sidebar({
       {/* Sidebar panel */}
       <aside
         className={`
-          fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 z-40 bg-slate-900 border-r border-slate-800 flex flex-col
+          fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 z-40 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col
           transition-transform duration-300 ease-in-out
           lg:translate-x-0 lg:static lg:h-auto lg:flex
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
-        <div className="p-4 border-b border-slate-800">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Navigation</h2>
             <button
@@ -142,8 +149,23 @@ export default function Sidebar({
           ))}
         </nav>
 
+        {/* Theme Toggle */}
+        {mounted && (
+          <div className="p-4 border-t border-slate-200 dark:border-slate-800 mt-auto">
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">Theme</label>
+            <select
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
+              className="select-field py-2 px-3 text-sm bg-slate-100 dark:bg-slate-800 border-none focus:ring-brand-500"
+            >
+              <option value="light">🔆 Light Mode</option>
+              <option value="dark">🌙 Dark Mode</option>
+            </select>
+          </div>
+        )}
+
         {/* Footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-900/50">
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50">
           <p className="text-[10px] font-medium text-slate-600 text-center uppercase tracking-wider">
             {projects.length} project{projects.length !== 1 ? 's' : ''} total
           </p>

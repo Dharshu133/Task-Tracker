@@ -73,7 +73,7 @@ export default function TaskColumn({
       <div className="flex items-center gap-2 mb-4">
         <div className={`w-2.5 h-2.5 rounded-full ${meta.dot}`} />
         <h3 className={`font-semibold text-sm ${meta.color}`}>{meta.label}</h3>
-        <span className="ml-auto text-xs font-semibold text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full">
+        <span className="ml-auto text-xs font-semibold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
           {tasks.length}
         </span>
       </div>

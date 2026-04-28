@@ -44,13 +44,13 @@ export default function AddProjectModal({ orgId, onClose, onCreated }: AddProjec
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl transition-all">
+      <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl transition-all">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-white">Create New Project</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Create New Project</h3>
             <button
               onClick={onClose}
-              className="text-slate-500 hover:text-white transition-colors"
+              className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -60,7 +60,7 @@ export default function AddProjectModal({ orgId, onClose, onCreated }: AddProjec
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="projectName" className="block text-sm font-medium text-slate-400 mb-2">
+              <label htmlFor="projectName" className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">
                 Project Name
               </label>
               <input
@@ -71,7 +71,7 @@ export default function AddProjectModal({ orgId, onClose, onCreated }: AddProjec
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Q4 Marketing Campaign"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all"
               />
             </div>
 
@@ -85,7 +85,7 @@ export default function AddProjectModal({ orgId, onClose, onCreated }: AddProjec
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-3 rounded-xl border border-slate-800 text-slate-400 font-semibold hover:bg-slate-800 hover:text-white transition-all"
+                className="flex-1 px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-all"
               >
                 Cancel
               </button>

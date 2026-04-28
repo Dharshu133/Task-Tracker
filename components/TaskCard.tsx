@@ -110,7 +110,7 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
 
         <div className="flex-1 min-w-0">
           {/* Title */}
-          <p className={`font-semibold text-sm leading-snug mb-1 ${localStatus === 'CLOSED' ? 'line-through text-slate-500' : 'text-slate-100'}`}>
+          <p className={`font-semibold text-sm leading-snug mb-1 ${localStatus === 'CLOSED' ? 'line-through text-slate-500' : 'text-slate-900 dark:text-slate-100'}`}>
             {task.title}
           </p>
 
@@ -128,7 +128,7 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
                 <span className="text-brand-500">@</span>{task.assignee.email.split('@')[0]}
               </span>
             )}
-            <span className="inline-flex items-center gap-1 text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full">
+            <span className="inline-flex items-center gap-1 text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
               📁 {task.project.name}
             </span>
           </div>
@@ -138,10 +138,10 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
             value={localStatus}
             disabled={!canUpdateStatus}
             onChange={(e) => handleStatusChange(e.target.value as Task['status'])}
-            className={`text-xs bg-slate-900 border border-slate-700 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors ${currentStatusMeta.color} ${!canUpdateStatus ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+            className={`text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors ${currentStatusMeta.color} ${!canUpdateStatus ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
           >
             {STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value} className="text-slate-300 bg-slate-900">
+              <option key={opt.value} value={opt.value} className="text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900">
                 {opt.label}
               </option>
             ))}
@@ -154,7 +154,7 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
           {canFullEdit && (
             <button
               onClick={() => onEdit(task)}
-              className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-600 hover:text-brand-400 hover:bg-brand-500/10 rounded-lg transition-all duration-200 shrink-0"
+              className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-500 dark:text-slate-400 hover:text-brand-400 hover:bg-brand-500/10 rounded-lg transition-all duration-200 shrink-0"
               aria-label="Edit task"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -168,7 +168,7 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
             <button
               onClick={handleDelete}
               disabled={isDeleting}
-              className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200 shrink-0"
+              className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200 shrink-0"
               aria-label="Delete task"
             >
               {isDeleting ? (

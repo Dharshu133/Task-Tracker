@@ -84,11 +84,11 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
     >
       <div className="glass-card w-full max-w-lg shadow-2xl shadow-black/50 animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700">
-          <h2 className="text-lg font-semibold text-white">Edit Task</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-300 dark:border-slate-700">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Edit Task</h2>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-500 hover:text-slate-300 hover:bg-slate-700 rounded-lg transition-colors"
+            className="p-1.5 text-slate-500 hover:text-slate-700 dark:text-slate-300 hover:bg-slate-700 rounded-lg transition-colors"
             aria-label="Close modal"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -139,7 +139,7 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
           {/* Project (Read-only for now as per requirement focus) */}
           <div>
             <label className="label">Project</label>
-            <div className="px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-slate-400 text-sm">
+            <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-400 text-sm">
               {task.project.name}
             </div>
           </div>
@@ -154,9 +154,9 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
               className="select-field"
               disabled={loading}
             >
-              <option value="" className="bg-slate-900">Unassigned</option>
+              <option value="" className="bg-white dark:bg-slate-900">Unassigned</option>
               {filteredUsers.map((u) => (
-                <option key={u.id} value={u.id} className="bg-slate-900">@{u.email.split('@')[0]} ({u.email})</option>
+                <option key={u.id} value={u.id} className="bg-white dark:bg-slate-900">@{u.email.split('@')[0]} ({u.email})</option>
               ))}
             </select>
           </div>

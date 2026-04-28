@@ -23,12 +23,12 @@ export default function Header({ user, onMenuToggle }: HeaderProps) {
   }
 
   return (
-    <header className="h-16 bg-slate-900/80 backdrop-blur-sm border-b border-slate-800 flex items-center px-4 gap-4 sticky top-0 z-30">
+    <header className="h-16 bg-white dark:bg-slate-900/80 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 flex items-center px-4 gap-4 sticky top-0 z-30">
       {/* Hamburger (mobile) */}
       <button
         id="sidebar-toggle"
         onClick={onMenuToggle}
-        className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+        className="lg:hidden p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:bg-slate-800 transition-colors"
         aria-label="Toggle sidebar"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -43,7 +43,7 @@ export default function Header({ user, onMenuToggle }: HeaderProps) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
           </svg>
         </div>
-        <span className="font-bold text-white text-lg hidden sm:block">Task Tracker</span>
+        <span className="font-bold text-slate-900 dark:text-white text-lg hidden sm:block">Task Tracker</span>
       </div>
 
       {/* Spacer */}
@@ -53,7 +53,7 @@ export default function Header({ user, onMenuToggle }: HeaderProps) {
       {user && (
         <div className="flex items-center gap-3">
           <div className="hidden sm:block text-right">
-            <p className="text-sm font-medium text-slate-200">{user.email}</p>
+            <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{user.email}</p>
             <p className="text-xs text-slate-500">
               {user.role === 'ADMIN' ? '👑 Admin' : '👤 Member'}
               {user.orgName ? ` · ${user.orgName}` : ''}

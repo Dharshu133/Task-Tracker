@@ -17,6 +17,7 @@ interface SidebarProps {
   userRole: string;
   onCreateProject: () => void;
   onDeleteProject: (id: string) => void;
+  unreadCount?: number;
 }
 
 export default function Sidebar({
@@ -28,6 +29,7 @@ export default function Sidebar({
   userRole,
   onCreateProject,
   onDeleteProject,
+  unreadCount = 0,
 }: SidebarProps) {
   const isAdmin = userRole === 'ADMIN';
   const { theme, setTheme } = useTheme();
@@ -82,22 +84,53 @@ export default function Sidebar({
             Dashboard
           </button>
 
+          {/* Notifications - All roles */}
+          <button
+            id="nav-notifications"
+            onClick={() => { onProjectSelect('NOTIFICATIONS' as any); onClose(); }}
+            className={`sidebar-item flex justify-between items-center ${activeProjectId === ('NOTIFICATIONS' as any) ? 'sidebar-item-active' : 'sidebar-item-inactive'}`}
+          >
+            <div className="flex items-center gap-3">
+              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              Notifications
+            </div>
+            {unreadCount > 0 && (
+              <span className="flex items-center justify-center w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full border border-white dark:border-slate-900">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+
           {/* Users - Admin only */}
           {isAdmin && (
-            <button
-              id="nav-users"
-              onClick={() => { onProjectSelect('USERS_VIEW' as any); onClose(); }}
-              className={`sidebar-item ${activeProjectId === ('USERS_VIEW' as any) ? 'sidebar-item-active' : 'sidebar-item-inactive'}`}
-            >
-              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-              Manage Users
-            </button>
+            <>
+              <div className="pt-4 pb-2 px-3">
+                <h3 className="text-[10px] font-bold text-slate-600 dark:text-slate-500 uppercase tracking-widest">Administration</h3>
+              </div>
+              <button
+                id="nav-users"
+                onClick={() => { onProjectSelect('USERS_VIEW' as any); onClose(); }}
+                className={`sidebar-item ${activeProjectId === ('USERS_VIEW' as any) ? 'sidebar-item-active' : 'sidebar-item-inactive'}`}
+              >
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                Manage Users
+              </button>
+              <button
+                id="nav-activity"
+                onClick={() => { onProjectSelect('ACTIVITY_LOG' as any); onClose(); }}
+                className={`sidebar-item ${activeProjectId === ('ACTIVITY_LOG' as any) ? 'sidebar-item-active' : 'sidebar-item-inactive'}`}
+              >
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Activity Log
+              </button>
+            </>
           )}
-
-
-
 
           <div className="pt-4 pb-2 px-3">
             <div className="flex items-center justify-between">

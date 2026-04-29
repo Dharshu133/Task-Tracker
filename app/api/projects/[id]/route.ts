@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { createActivityLog } from '@/lib/services/activityLogService';
+import { ActionType } from '@prisma/client';
 
 export async function PATCH(
   request: NextRequest,
@@ -33,6 +35,15 @@ export async function PATCH(
       where: { id },
       data: { name: name.trim() },
     });
+
+    const adminId = request.headers.get('x-user-id');
+    if (adminId) {
+      await createActivityLog({
+        userId: adminId,
+        actionType: ActionType.UPDATED,
+        detail: `Updated project: ${project.name} -> ${updated.name}`
+      });
+    }
 
     return NextResponse.json(updated);
   } catch (error) {
@@ -71,6 +82,15 @@ export async function DELETE(
       prisma.task.deleteMany({ where: { projectId: id } }),
       prisma.project.delete({ where: { id } }),
     ]);
+
+    const adminId = request.headers.get('x-user-id');
+    if (adminId) {
+      await createActivityLog({
+        userId: adminId,
+        actionType: ActionType.DELETED,
+        detail: `Deleted project: ${project.name}`
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

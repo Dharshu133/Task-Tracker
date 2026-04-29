@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { createActivityLog } from '@/lib/services/activityLogService';
+import { ActionType } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,6 +51,15 @@ export async function POST(request: NextRequest) {
     const project = await prisma.project.create({
       data: { name: name.trim(), orgId: org_id },
     });
+
+    const adminId = request.headers.get('x-user-id');
+    if (adminId) {
+      await createActivityLog({
+        userId: adminId,
+        actionType: ActionType.CREATED,
+        detail: `Created project: ${project.name}`
+      });
+    }
 
     return NextResponse.json(project, { status: 201 });
   } catch (error) {

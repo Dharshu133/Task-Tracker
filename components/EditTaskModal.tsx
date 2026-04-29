@@ -28,7 +28,7 @@ interface EditTaskModalProps {
 }
 
 export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose, onUpdated }: EditTaskModalProps) {
-  const [activeTab, setActiveTab] = useState<'DETAILS' | 'COMMENTS' | 'ACTIVITY'>(
+  const [activeTab, setActiveTab] = useState<'DETAILS' | 'COMMENTS'>(
     currentUserRole === 'MEMBER' ? 'COMMENTS' : 'DETAILS'
   );
 
@@ -44,7 +44,6 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
   const [newComment, setNewComment] = useState('');
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [loadingData, setLoadingData] = useState(false);
-  const [logs, setLogs] = useState<any[]>([]);
 
   const filteredUsers = currentUserRole === 'MEMBER' 
     ? orgUsers.filter(u => u.role === 'MEMBER')
@@ -61,11 +60,6 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
       setLoadingData(true);
       api.get<any[]>(`/api/tasks/${task.id}/comments`)
         .then(setComments)
-        .finally(() => setLoadingData(false));
-    } else if (activeTab === 'ACTIVITY') {
-      setLoadingData(true);
-      api.get<any[]>(`/api/activity-logs?task_id=${task.id}`)
-        .then(setLogs)
         .finally(() => setLoadingData(false));
     }
   }, [activeTab, task.id]);
@@ -145,9 +139,8 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
           </button>
         </div>
 
-        {/* Tabs */}
         <div className="flex border-b border-slate-300 dark:border-slate-700 px-6 shrink-0">
-          {(['DETAILS', 'COMMENTS', 'ACTIVITY'] as const)
+          {(['DETAILS', 'COMMENTS'] as const)
             .filter(tab => currentUserRole === 'ADMIN' || tab === 'COMMENTS')
             .map(tab => (
             <button
@@ -285,28 +278,7 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
             </div>
           )}
 
-          {activeTab === 'ACTIVITY' && (
-            <div className="space-y-3">
-              {loadingData ? <p className="text-sm text-slate-500">Loading activity...</p> :
-               logs.length === 0 ? <p className="text-sm text-slate-500">No activity yet.</p> :
-               logs.map(log => (
-                 <div key={log.id} className="flex gap-3 text-sm text-slate-700 dark:text-slate-300">
-                   <div className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 mt-1.5 shrink-0" />
-                   <div>
-                     <span className="font-semibold text-slate-900 dark:text-white">@{log.user.email.split('@')[0]}</span>
-                     {' '}
-                     {log.actionType === 'CREATED' ? 'created this task' :
-                      log.actionType === 'UPDATED' ? 'updated task details' :
-                      log.actionType === 'STATUS_CHANGED' ? 'changed the status' :
-                      log.actionType === 'ASSIGNED' ? 'updated the assignee' :
-                      log.actionType === 'COMMENTED' ? 'added a comment' : 'performed an action'}
-                     <div className="text-[10px] text-slate-500 mt-0.5">{new Date(log.createdAt).toLocaleString()}</div>
-                   </div>
-                 </div>
-               ))
-              }
-            </div>
-          )}
+
         </div>
 
         {/* Footer */}

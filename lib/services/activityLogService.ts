@@ -17,4 +17,13 @@ export const getActivityLogs = async ({ taskId, userId, projectId }: { taskId?: 
   });
 };
 
-// Note: creation is handled within transactions in taskService and commentService
+export const createActivityLog = async (data: {
+  userId: string;
+  taskId?: string;
+  actionType: ActionType;
+  detail?: string;
+}) => {
+  return await prisma.activityLog.create({
+    data
+  });
+};

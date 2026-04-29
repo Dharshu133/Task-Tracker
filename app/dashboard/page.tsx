@@ -11,8 +11,17 @@ import AddProjectModal from '@/components/AddProjectModal';
 import ProjectOverview from '@/components/ProjectOverview';
 import AddUserModal from '@/components/AddUserModal';
 import EditUserModal from '@/components/EditUserModal';
+import ActivityLogView from '@/components/ActivityLogView';
+import NotificationsView from '@/components/NotificationsView';
 import Toast from '@/components/Toast';
 import { api } from '@/lib/api';
+
+interface Notification {
+  id: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}
 
 interface UserInfo {
   id: string;
@@ -79,6 +88,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // Filters
   const [keyword, setKeyword] = useState('');
@@ -142,6 +152,25 @@ export default function DashboardPage() {
       fetchSummaries();
     }
   }, [activeProjectId, fetchSummaries]);
+
+  // Notifications polling
+  useEffect(() => {
+    if (!user) return;
+    const fetchNotifications = async () => {
+      try {
+        const data = await api.get<Notification[]>('/api/notifications');
+        setNotifications(data);
+      } catch (e) {
+        console.error('Failed to fetch notifications', e);
+      }
+    };
+    
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   // Fetch tasks whenever active project changes
   const fetchTasks = useCallback(async () => {
@@ -245,9 +274,13 @@ export default function DashboardPage() {
   const activeProjectName =
     activeProjectId === ('USERS_VIEW' as any)
       ? 'User Management'
-      : activeProjectId 
-        ? projects.find((p) => p.id === activeProjectId)?.name ?? 'Project' 
-        : 'Dashboard';
+      : activeProjectId === ('ACTIVITY_LOG' as any)
+        ? 'Activity Log'
+        : activeProjectId === ('NOTIFICATIONS' as any)
+          ? 'Notifications'
+          : activeProjectId 
+            ? projects.find((p) => p.id === activeProjectId)?.name ?? 'Project' 
+            : 'Dashboard';
 
   if (!user) return null;
 
@@ -265,6 +298,7 @@ export default function DashboardPage() {
           userRole={user.role}
           onCreateProject={() => setShowAddProjectModal(true)}
           onDeleteProject={handleProjectDelete}
+          unreadCount={unreadCount}
         />
 
         {/* Main content */}
@@ -276,9 +310,13 @@ export default function DashboardPage() {
               <p className="text-slate-500 text-sm mt-0.5">
                 {activeProjectId === ('USERS_VIEW' as any)
                   ? `Manage the ${orgUsers.length} users in your organization`
-                  : activeProjectId 
-                    ? `${tasks.length} task${tasks.length !== 1 ? 's' : ''} in this project`
-                    : 'Overview of all your projects'
+                  : activeProjectId === ('ACTIVITY_LOG' as any)
+                    ? 'Global history of all actions performed in the system'
+                    : activeProjectId === ('NOTIFICATIONS' as any)
+                      ? `You have ${unreadCount} unread notifications`
+                      : activeProjectId 
+                        ? `${tasks.length} task${tasks.length !== 1 ? 's' : ''} in this project`
+                        : 'Overview of all your projects'
                 }
               </p>
             </div>
@@ -294,7 +332,7 @@ export default function DashboardPage() {
                 <span className="hidden sm:inline">Add User</span>
                 <span className="sm:hidden">Add</span>
               </button>
-            ) : user.role === 'ADMIN' ? (
+            ) : (activeProjectId === ('ACTIVITY_LOG' as any) || activeProjectId === ('NOTIFICATIONS' as any)) ? null : user.role === 'ADMIN' ? (
               <button
                 id="add-task-btn"
                 onClick={() => setShowAddModal(true)}
@@ -394,6 +432,16 @@ export default function DashboardPage() {
                 </tbody>
               </table>
             </div>
+          ) : activeProjectId === ('ACTIVITY_LOG' as any) ? (
+            <ActivityLogView />
+          ) : activeProjectId === ('NOTIFICATIONS' as any) ? (
+            <NotificationsView 
+              notifications={notifications} 
+              onMarkAllRead={async () => {
+                await api.patch('/api/notifications/read-all', {});
+                setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+              }}
+            />
           ) : activeProjectId ? (
             <>
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 mb-6 flex flex-wrap gap-4 items-end">

@@ -216,3 +216,21 @@ export const updateDueDate = async (id: string, dueDate: string | null, userId: 
     return task;
   });
 };
+
+export const deleteTask = async (id: string, userId: string) => {
+  const task = await prisma.task.findUnique({ where: { id } });
+  if (!task) return null;
+
+  return await prisma.$transaction(async (tx) => {
+    await tx.activityLog.create({
+      data: {
+        taskId: id,
+        userId,
+        actionType: ActionType.DELETED,
+        detail: `Deleted task: ${task.title}`
+      }
+    });
+
+    return await tx.task.delete({ where: { id } });
+  });
+};

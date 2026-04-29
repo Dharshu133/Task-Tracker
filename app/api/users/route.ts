@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { hashPassword } from '@/lib/auth';
+import { createActivityLog } from '@/lib/services/activityLogService';
+import { ActionType } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,6 +57,14 @@ export async function POST(request: NextRequest) {
       select: { id: true, email: true, role: true, assignedProjectId: true },
     });
 
+    const adminId = request.headers.get('x-user-id');
+    if (adminId) {
+      await createActivityLog({
+        userId: adminId,
+        actionType: ActionType.CREATED,
+        detail: `Created user: ${user.email} (${user.role})`
+      });
+    }
 
     return NextResponse.json(user, { status: 201 });
   } catch (error) {

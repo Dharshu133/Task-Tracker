@@ -81,6 +81,8 @@ enum Priority {
 }
 
 enum ActionType {
+  LOGIN
+  LOGOUT
   CREATED
   UPDATED
   DELETED

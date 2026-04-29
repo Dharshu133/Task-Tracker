@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { comparePassword, signToken } from '@/lib/auth';
+import { createActivityLog } from '@/lib/services/activityLogService';
+import { ActionType } from '@prisma/client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,6 +43,13 @@ export async function POST(request: NextRequest) {
       orgId: user.orgId,
       assignedProjectId: user.assignedProjectId,
     });
+
+    // Log login asynchronously
+    createActivityLog({
+      userId: user.id,
+      actionType: ActionType.LOGIN,
+      detail: `User ${user.email} logged in`
+    }).catch(console.error);
 
     return NextResponse.json({
       token,

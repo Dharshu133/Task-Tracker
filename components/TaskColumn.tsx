@@ -55,7 +55,7 @@ interface TaskColumnProps {
   tasks: Task[];
   currentUserId: string;
   currentUserRole: string;
-  onUpdate: (updated: Task) => void;
+  onUpdate: (updated: Task, toastMsg?: string) => void;
   onDelete: (id: string) => void;
   onEdit: (task: Task) => void;
   onDropTask?: (taskId: string, newStatus: Task['status']) => void;

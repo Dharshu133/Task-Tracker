@@ -27,7 +27,7 @@ interface KanbanBoardProps {
   tasks: Task[];
   currentUserId: string;
   currentUserRole: string;
-  onUpdate: (updated: Task) => void;
+  onUpdate: (updated: Task, toastMsg?: string) => void;
   onDelete: (id: string) => void;
   onEdit: (task: Task) => void;
 }
@@ -53,11 +53,11 @@ export default function KanbanBoard({
 
     const prevStatus = task.status;
     const updatedTask = { ...task, status: newStatus };
-    onUpdate(updatedTask);
+    onUpdate(updatedTask, 'Status updated successfully');
 
     try {
       const serverUpdatedTask = await api.patch<Task>(`/api/tasks/${taskId}`, { status: newStatus });
-      onUpdate(serverUpdatedTask);
+      onUpdate(serverUpdatedTask, 'Status updated successfully');
     } catch {
       onUpdate({ ...task, status: prevStatus });
     }

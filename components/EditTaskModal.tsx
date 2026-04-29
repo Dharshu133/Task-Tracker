@@ -24,7 +24,7 @@ interface EditTaskModalProps {
   orgUsers: OrgUser[];
   currentUserRole: string;
   onClose: () => void;
-  onUpdated: (task: Task) => void;
+  onUpdated: (task: Task, toastMsg?: string) => void;
 }
 
 export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose, onUpdated }: EditTaskModalProps) {
@@ -105,7 +105,7 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
       setComments(prev => [...prev, c]);
       setNewComment('');
       setReplyTo(null);
-      onUpdated({ ...task, _count: { comments: (task._count?.comments || 0) + 1 } });
+      onUpdated({ ...task, _count: { comments: (task._count?.comments || 0) + 1 } }, 'Comment added successfully');
     } catch {
       setError('Failed to add comment');
     } finally {
@@ -120,7 +120,7 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
       await api.delete(`/api/comments/${commentId}`);
       setComments(prev => prev.filter(c => c.id !== commentId && c.parentId !== commentId));
       // Optionally update task comment count, though it's complex to count all sub-comments
-      onUpdated({ ...task }); 
+      onUpdated({ ...task }, 'Thread resolved successfully'); 
     } catch {
       setError('Failed to resolve comment');
     } finally {
@@ -135,7 +135,9 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-300 dark:border-slate-700 shrink-0">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Task Details</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+              {currentUserRole === 'ADMIN' ? 'Task Details' : 'Task Discussion'}
+            </h2>
             <span className="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-md text-slate-500">{task.id.slice(0,8)}</span>
           </div>
           <button onClick={onClose} className="p-1.5 text-slate-500 hover:text-slate-700 dark:text-slate-300 hover:bg-slate-700 rounded-lg transition-colors">

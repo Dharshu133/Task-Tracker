@@ -169,9 +169,13 @@ export default function DashboardPage() {
     fetchTasks();
   }, [fetchTasks]);
 
-  function handleTaskUpdate(updated: Task) {
+  function handleTaskUpdate(updated: Task, toastMsg?: string) {
     setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
-    setToast({ message: 'Task updated successfully', type: 'success' });
+    if (toastMsg) {
+      setToast({ message: toastMsg, type: 'success' });
+    } else {
+      setToast({ message: 'Task updated successfully', type: 'success' });
+    }
     if (activeProjectId === null) fetchSummaries();
   }
 

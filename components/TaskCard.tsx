@@ -27,7 +27,7 @@ interface TaskCardProps {
   task: Task;
   currentUserId: string;
   currentUserRole: string;
-  onUpdate: (updated: Task) => void;
+  onUpdate: (updated: Task, toastMsg?: string) => void;
   onDelete: (id: string) => void;
   onEdit: (task: Task) => void;
 }
@@ -67,11 +67,11 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
     if (!canUpdateStatus) return;
     const prevStatus = localStatus;
     setLocalStatus(newStatus); // instant UI update (<100ms)
-    onUpdate({ ...task, status: newStatus });
+    onUpdate({ ...task, status: newStatus }, 'Status updated successfully');
 
     try {
       const updated = await api.patch<Task>(`/api/tasks/${task.id}`, { status: newStatus });
-      onUpdate(updated);
+      onUpdate(updated, 'Status updated successfully');
     } catch {
       // Rollback on failure
       setLocalStatus(prevStatus);

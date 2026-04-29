@@ -24,7 +24,14 @@ async function request<T>(
     throw new ApiError(res.status, errorData.error ?? 'Request failed');
   }
 
-  return res.json() as Promise<T>;
+  const data = await res.json();
+  if (data && typeof data === 'object' && 'success' in data) {
+    if (!data.success) {
+      throw new ApiError(res.status, data.error || 'Request failed');
+    }
+    return data.data as T;
+  }
+  return data as T;
 }
 
 export class ApiError extends Error {

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import TaskCard from './TaskCard';
 
 interface User {
@@ -13,10 +14,13 @@ interface Task {
   title: string;
   description: string | null;
   status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  dueDate: string | null;
   createdBy: string;
   assignee: User | null;
   creator: User;
   project: { id: string; name: string };
+  _count?: { comments: number };
 }
 
 const COLUMN_META = {
@@ -54,6 +58,7 @@ interface TaskColumnProps {
   onUpdate: (updated: Task) => void;
   onDelete: (id: string) => void;
   onEdit: (task: Task) => void;
+  onDropTask?: (taskId: string, newStatus: Task['status']) => void;
 }
 
 export default function TaskColumn({
@@ -64,11 +69,28 @@ export default function TaskColumn({
   onUpdate,
   onDelete,
   onEdit,
+  onDropTask,
 }: TaskColumnProps) {
+  const [isDragOver, setIsDragOver] = useState(false);
   const meta = COLUMN_META[status];
 
   return (
-    <div className={`flex flex-col rounded-xl border ${meta.border} ${meta.bg} p-4 min-h-[300px]`}>
+    <div 
+      className={`flex flex-col rounded-xl border ${meta.border} ${isDragOver ? 'bg-brand-500/10 ring-2 ring-brand-500' : meta.bg} p-4 min-h-[300px] transition-colors`}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setIsDragOver(true);
+      }}
+      onDragLeave={() => setIsDragOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setIsDragOver(false);
+        const taskId = e.dataTransfer.getData('taskId');
+        if (taskId && onDropTask) {
+          onDropTask(taskId, status);
+        }
+      }}
+    >
       {/* Column header */}
       <div className="flex items-center gap-2 mb-4">
         <div className={`w-2.5 h-2.5 rounded-full ${meta.dot}`} />

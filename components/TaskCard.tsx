@@ -14,10 +14,13 @@ interface Task {
   title: string;
   description: string | null;
   status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  dueDate: string | null;
   createdBy: string;
   assignee: User | null;
   creator: User;
   project: { id: string; name: string };
+  _count?: { comments: number };
 }
 
 interface TaskCardProps {
@@ -34,6 +37,20 @@ const STATUS_OPTIONS: { value: Task['status']; label: string; color: string }[] 
   { value: 'IN_PROGRESS', label: 'In Progress', color: 'text-amber-400' },
   { value: 'CLOSED', label: 'Closed', color: 'text-emerald-400' },
 ];
+
+const PRIORITY_COLORS: Record<string, string> = {
+  LOW: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
+  MEDIUM: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+  HIGH: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
+  CRITICAL: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+};
+
+function isOverdue(dateString: string, status: Task['status']) {
+  if (status === 'CLOSED') return false;
+  const dueDate = new Date(dateString);
+  dueDate.setHours(23, 59, 59, 999);
+  return dueDate.getTime() < Date.now();
+}
 
 export default function TaskCard({ task, currentUserId, currentUserRole, onUpdate, onDelete, onEdit }: TaskCardProps) {
   const [localStatus, setLocalStatus] = useState(task.status);
@@ -85,7 +102,11 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
 
   return (
     <div
-      className={`glass-card p-4 group transition-all duration-200 hover:border-slate-600/80 hover:shadow-lg hover:shadow-black/20 ${
+      draggable={true}
+      onDragStart={(e) => {
+        e.dataTransfer.setData('taskId', task.id);
+      }}
+      className={`glass-card p-4 group transition-all duration-200 hover:border-slate-600/80 hover:shadow-lg hover:shadow-black/20 cursor-grab active:cursor-grabbing ${
         localStatus === 'CLOSED' ? 'opacity-60' : ''
       }`}
     >
@@ -122,7 +143,7 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
           )}
 
           {/* Assignee & Project */}
-          <div className="flex flex-wrap items-center gap-2 mb-3">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
             {task.assignee && (
               <span className="inline-flex items-center gap-1 text-xs text-brand-400 bg-brand-600/10 px-2 py-0.5 rounded-full">
                 <span className="text-brand-500">@</span>{task.assignee.email.split('@')[0]}
@@ -131,6 +152,23 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
             <span className="inline-flex items-center gap-1 text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
               📁 {task.project.name}
             </span>
+          </div>
+
+          {/* Priority & Due Date */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${PRIORITY_COLORS[task.priority] || 'bg-slate-100 text-slate-500'}`}>
+              {task.priority}
+            </span>
+            {task.dueDate && (
+              <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${isOverdue(task.dueDate, localStatus) ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                ⏳ {new Date(task.dueDate).toLocaleDateString()}
+              </span>
+            )}
+            {task._count && task._count.comments > 0 && (
+               <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full">
+                 💬 {task._count.comments}
+               </span>
+            )}
           </div>
 
           {/* Status dropdown */}

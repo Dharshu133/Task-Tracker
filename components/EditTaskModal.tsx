@@ -3,24 +3,20 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { api, ApiError } from '@/lib/api';
 
-interface Project {
-  id: string;
-  name: string;
-}
-interface OrgUser {
-  id: string;
-  email: string;
-  role: string;
-}
+interface Project { id: string; name: string; }
+interface OrgUser { id: string; email: string; role: string; }
 interface Task {
   id: string;
   title: string;
   description: string | null;
   status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  dueDate: string | null;
   createdBy: string;
   assignee: { id: string; email: string; role: string } | null;
   creator: { id: string; email: string; role: string };
   project: { id: string; name: string };
+  _count?: { comments: number };
 }
 
 interface EditTaskModalProps {
@@ -32,33 +28,48 @@ interface EditTaskModalProps {
 }
 
 export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose, onUpdated }: EditTaskModalProps) {
+  const [activeTab, setActiveTab] = useState<'DETAILS' | 'COMMENTS' | 'ACTIVITY'>('DETAILS');
+
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || '');
   const [assigneeId, setAssigneeId] = useState(task.assignee?.id || '');
+  const [priority, setPriority] = useState(task.priority || 'LOW');
+  const [dueDate, setDueDate] = useState(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Filter assignees: Members can only assign to other Members
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [loadingData, setLoadingData] = useState(false);
+  const [logs, setLogs] = useState<any[]>([]);
+
   const filteredUsers = currentUserRole === 'MEMBER' 
     ? orgUsers.filter(u => u.role === 'MEMBER')
     : orgUsers;
 
-  // Close on Escape
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose(); }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  function validate(): string {
-    if (!title.trim()) return 'Title is required';
-    return '';
-  }
+  useEffect(() => {
+    if (activeTab === 'COMMENTS') {
+      setLoadingData(true);
+      api.get<any[]>(`/api/tasks/${task.id}/comments`)
+        .then(setComments)
+        .finally(() => setLoadingData(false));
+    } else if (activeTab === 'ACTIVITY') {
+      setLoadingData(true);
+      api.get<any[]>(`/api/activity-logs?task_id=${task.id}`)
+        .then(setLogs)
+        .finally(() => setLoadingData(false));
+    }
+  }, [activeTab, task.id]);
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleUpdateDetails(e: FormEvent) {
     e.preventDefault();
-    const err = validate();
-    if (err) { setError(err); return; }
+    if (!title.trim()) { setError('Title is required'); return; }
 
     setLoading(true);
     setError('');
@@ -67,6 +78,8 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
         title: title.trim(),
         description: description.trim() || null,
         assignee_id: assigneeId || null,
+        priority,
+        due_date: dueDate ? new Date(dueDate).toISOString() : null,
       });
       onUpdated(updated);
       onClose();
@@ -77,118 +90,151 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
     }
   }
 
+  async function handleAddComment(e: FormEvent) {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    setLoading(true);
+    try {
+      const c = await api.post<any>(`/api/tasks/${task.id}/comments`, { content: newComment.trim() });
+      setComments(prev => [...prev, c]);
+      setNewComment('');
+      onUpdated({ ...task, _count: { comments: (task._count?.comments || 0) + 1 } });
+    } catch {
+      setError('Failed to add comment');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="glass-card w-full max-w-lg shadow-2xl shadow-black/50 animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="glass-card w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl shadow-black/50 animate-in fade-in zoom-in-95 duration-200">
+        
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-300 dark:border-slate-700">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Edit Task</h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-500 hover:text-slate-700 dark:text-slate-300 hover:bg-slate-700 rounded-lg transition-colors"
-            aria-label="Close modal"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-300 dark:border-slate-700 shrink-0">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Task Details</h2>
+            <span className="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-md text-slate-500">{task.id.slice(0,8)}</span>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-slate-500 hover:text-slate-700 dark:text-slate-300 hover:bg-slate-700 rounded-lg transition-colors">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
 
+        {/* Tabs */}
+        <div className="flex border-b border-slate-300 dark:border-slate-700 px-6 shrink-0">
+          {(['DETAILS', 'COMMENTS', 'ACTIVITY'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === tab ? 'border-brand-500 text-brand-500' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+            >
+              {tab.charAt(0) + tab.slice(1).toLowerCase()}
+              {tab === 'COMMENTS' && task._count?.comments ? ` (${task._count.comments})` : ''}
+            </button>
+          ))}
+        </div>
+
         {/* Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate>
-          {error && (
-            <div role="alert" className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg">
-              {error}
+        <div className="p-5 overflow-y-auto flex-1 bg-slate-50/50 dark:bg-slate-900/20">
+          {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg mb-4">{error}</div>}
+
+          {activeTab === 'DETAILS' && (
+            <form id="edit-form" onSubmit={handleUpdateDetails} className="space-y-3">
+              <div>
+                <label className="label">Title <span className="text-red-400">*</span></label>
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="input-field" disabled={loading} />
+              </div>
+              <div>
+                <label className="label">Description</label>
+                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="input-field resize-none" disabled={loading} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Priority</label>
+                  <select value={priority} onChange={e => setPriority(e.target.value as any)} className="select-field" disabled={loading}>
+                    <option value="LOW" className="bg-white dark:bg-slate-900">Low</option>
+                    <option value="MEDIUM" className="bg-white dark:bg-slate-900">Medium</option>
+                    <option value="HIGH" className="bg-white dark:bg-slate-900">High</option>
+                    <option value="CRITICAL" className="bg-white dark:bg-slate-900">Critical</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Due Date</label>
+                  <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="input-field" disabled={loading} />
+                </div>
+              </div>
+
+              <div>
+                <label className="label">Assignee</label>
+                <select value={assigneeId} onChange={e => setAssigneeId(e.target.value)} className="select-field" disabled={loading}>
+                  <option value="" className="bg-white dark:bg-slate-900">Unassigned</option>
+                  {filteredUsers.map(u => (
+                    <option key={u.id} value={u.id} className="bg-white dark:bg-slate-900">@{u.email.split('@')[0]}</option>
+                  ))}
+                </select>
+              </div>
+            </form>
+          )}
+
+          {activeTab === 'COMMENTS' && (
+            <div className="space-y-4 h-full flex flex-col">
+              <div className="flex-1 space-y-3">
+                {loadingData ? <p className="text-sm text-slate-500">Loading comments...</p> : 
+                 comments.length === 0 ? <p className="text-sm text-slate-500">No comments yet. Start the conversation!</p> :
+                 comments.map(c => (
+                  <div key={c.id} className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-semibold text-xs text-brand-500">@{c.user.email.split('@')[0]}</span>
+                      <span className="text-[10px] text-slate-500">{new Date(c.createdAt).toLocaleString()}</span>
+                    </div>
+                    <p className="text-sm text-slate-800 dark:text-slate-200">{c.content}</p>
+                  </div>
+                 ))
+                }
+              </div>
+              <form onSubmit={handleAddComment} className="mt-4 flex gap-2">
+                <input type="text" value={newComment} onChange={e => setNewComment(e.target.value)} placeholder="Type a comment..." className="input-field" disabled={loading} />
+                <button type="submit" className="btn-primary shrink-0" disabled={loading || !newComment.trim()}>Send</button>
+              </form>
             </div>
           )}
 
-          {/* Title */}
-          <div>
-            <label htmlFor="edit-task-title" className="label">
-              Title <span className="text-red-400">*</span>
-            </label>
-            <input
-              id="edit-task-title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter task title"
-              className="input-field"
-              disabled={loading}
-              autoFocus
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label htmlFor="edit-task-description" className="label">Description</label>
-            <textarea
-              id="edit-task-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Optional task description…"
-              rows={3}
-              className="input-field resize-none"
-              disabled={loading}
-            />
-          </div>
-
-          {/* Project (Read-only for now as per requirement focus) */}
-          <div>
-            <label className="label">Project</label>
-            <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-400 text-sm">
-              {task.project.name}
+          {activeTab === 'ACTIVITY' && (
+            <div className="space-y-3">
+              {loadingData ? <p className="text-sm text-slate-500">Loading activity...</p> :
+               logs.length === 0 ? <p className="text-sm text-slate-500">No activity yet.</p> :
+               logs.map(log => (
+                 <div key={log.id} className="flex gap-3 text-sm text-slate-700 dark:text-slate-300">
+                   <div className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 mt-1.5 shrink-0" />
+                   <div>
+                     <span className="font-semibold text-slate-900 dark:text-white">@{log.user.email.split('@')[0]}</span>
+                     {' '}
+                     {log.actionType === 'CREATED' ? 'created this task' :
+                      log.actionType === 'UPDATED' ? 'updated task details' :
+                      log.actionType === 'STATUS_CHANGED' ? 'changed the status' :
+                      log.actionType === 'ASSIGNED' ? 'updated the assignee' :
+                      log.actionType === 'COMMENTED' ? 'added a comment' : 'performed an action'}
+                     <div className="text-[10px] text-slate-500 mt-0.5">{new Date(log.createdAt).toLocaleString()}</div>
+                   </div>
+                 </div>
+               ))
+              }
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* Assignee */}
-          <div>
-            <label htmlFor="edit-task-assignee" className="label">Assignee</label>
-            <select
-              id="edit-task-assignee"
-              value={assigneeId}
-              onChange={(e) => setAssigneeId(e.target.value)}
-              className="select-field"
-              disabled={loading}
-            >
-              <option value="" className="bg-white dark:bg-slate-900">Unassigned</option>
-              {filteredUsers.map((u) => (
-                <option key={u.id} value={u.id} className="bg-white dark:bg-slate-900">@{u.email.split('@')[0]} ({u.email})</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Buttons */}
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn-ghost flex-1"
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button
-              id="update-task-submit"
-              type="submit"
-              className="btn-primary flex-1"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                  </svg>
-                  Updating…
-                </>
-              ) : 'Save Changes'}
+        {/* Footer */}
+        {activeTab === 'DETAILS' && (
+          <div className="p-5 border-t border-slate-300 dark:border-slate-700 flex gap-3 shrink-0 bg-white dark:bg-slate-900">
+            <button type="button" onClick={onClose} className="btn-ghost flex-1" disabled={loading}>Cancel</button>
+            <button type="submit" form="edit-form" className="btn-primary flex-1" disabled={loading}>
+              {loading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
-        </form>
+        )}
+
       </div>
     </div>
   );

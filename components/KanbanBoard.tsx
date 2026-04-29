@@ -1,6 +1,7 @@
 'use client';
 
 import TaskColumn from './TaskColumn';
+import { api } from '@/lib/api';
 
 interface User {
   id: string;
@@ -13,10 +14,13 @@ interface Task {
   title: string;
   description: string | null;
   status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  dueDate: string | null;
   createdBy: string;
   assignee: User | null;
   creator: User;
   project: { id: string; name: string };
+  _count?: { comments: number };
 }
 
 interface KanbanBoardProps {
@@ -41,6 +45,24 @@ export default function KanbanBoard({
   const tasksByStatus = (status: Task['status']) =>
     tasks.filter((t) => t.status === status);
 
+  const handleDropTask = async (taskId: string, newStatus: Task['status']) => {
+    const taskIndex = tasks.findIndex(t => t.id === taskId);
+    if (taskIndex === -1) return;
+    const task = tasks[taskIndex];
+    if (task.status === newStatus) return;
+
+    const prevStatus = task.status;
+    const updatedTask = { ...task, status: newStatus };
+    onUpdate(updatedTask);
+
+    try {
+      const serverUpdatedTask = await api.patch<Task>(`/api/tasks/${taskId}`, { status: newStatus });
+      onUpdate(serverUpdatedTask);
+    } catch {
+      onUpdate({ ...task, status: prevStatus });
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {STATUSES.map((status) => (
@@ -53,6 +75,7 @@ export default function KanbanBoard({
           onUpdate={onUpdate}
           onDelete={onDelete}
           onEdit={onEdit}
+          onDropTask={handleDropTask}
         />
       ))}
     </div>

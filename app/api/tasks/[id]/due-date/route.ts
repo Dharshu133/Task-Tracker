@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateTask } from '@/lib/services/taskService';
-import { updateTaskSchema } from '@/lib/validators/taskValidator';
+import { updateDueDate } from '@/lib/services/taskService';
+import { dueDateUpdateSchema } from '@/lib/validators/taskValidator';
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -12,13 +12,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     }
 
     const body = await request.json();
-    const parsed = updateTaskSchema.safeParse(body);
+    const parsed = dueDateUpdateSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json({ success: false, error: parsed.error.issues[0].message }, { status: 400 });
     }
 
-    const task = await updateTask(id, parsed.data, userId);
+    const task = await updateDueDate(id, parsed.data.due_date, userId);
 
     if (!task) {
       return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
@@ -26,7 +26,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     return NextResponse.json({ success: true, data: task });
   } catch (error: any) {
-    console.error('[PATCH /api/tasks/[id]]', error);
+    console.error('[PATCH /api/tasks/[id]/due-date]', error);
     return NextResponse.json({ success: false, error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

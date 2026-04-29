@@ -47,10 +47,13 @@ interface Task {
   title: string;
   description: string | null;
   status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  dueDate: string | null;
   createdBy: string;
   assignee: { id: string; email: string; role: string } | null;
   creator: { id: string; email: string; role: string };
   project: { id: string; name: string };
+  _count?: { comments: number };
 }
 
 export default function DashboardPage() {
@@ -70,6 +73,18 @@ export default function DashboardPage() {
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Filters
+  const [keyword, setKeyword] = useState('');
+  const [debouncedKeyword, setDebouncedKeyword] = useState('');
+  const [priority, setPriority] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [isOverdue, setIsOverdue] = useState(false);
+
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedKeyword(keyword), 500);
+    return () => clearTimeout(handler);
+  }, [keyword]);
 
   // Auth guard
   useEffect(() => {
@@ -127,7 +142,14 @@ export default function DashboardPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const qs = activeProjectId ? `?project_id=${activeProjectId}` : '';
+      const params = new URLSearchParams();
+      if (activeProjectId && activeProjectId !== 'USERS_VIEW') params.append('project_id', activeProjectId);
+      if (debouncedKeyword) params.append('keyword', debouncedKeyword);
+      if (priority) params.append('priority', priority);
+      if (dueDate) params.append('due_date', dueDate);
+      if (isOverdue) params.append('is_overdue', 'true');
+
+      const qs = params.toString() ? `?${params.toString()}` : '';
       const data = await api.get<Task[]>(`/api/tasks${qs}`);
       setTasks(data);
     } catch {
@@ -135,7 +157,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, activeProjectId]);
+  }, [user, activeProjectId, debouncedKeyword, priority, dueDate, isOverdue]);
 
   useEffect(() => {
     fetchTasks();
@@ -317,14 +339,41 @@ export default function DashboardPage() {
               </table>
             </div>
           ) : activeProjectId ? (
-            <KanbanBoard
-              tasks={tasks}
-              currentUserId={user.id}
-              currentUserRole={user.role}
-              onUpdate={handleTaskUpdate}
-              onDelete={handleTaskDelete}
-              onEdit={handleEditClick}
-            />
+            <>
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 mb-6 flex flex-wrap gap-4 items-end">
+                <div className="flex-1 min-w-[200px]">
+                  <label className="text-xs font-semibold text-slate-500 mb-1 block">Search</label>
+                  <input type="text" placeholder="Search tasks..." value={keyword} onChange={e => setKeyword(e.target.value)} className="input-field py-1.5" />
+                </div>
+                <div className="w-32">
+                  <label className="text-xs font-semibold text-slate-500 mb-1 block">Priority</label>
+                  <select value={priority} onChange={e => setPriority(e.target.value)} className="select-field py-1.5">
+                    <option value="">All</option>
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                    <option value="CRITICAL">Critical</option>
+                  </select>
+                </div>
+                <div className="w-40">
+                  <label className="text-xs font-semibold text-slate-500 mb-1 block">Due Date</label>
+                  <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="input-field py-1.5" />
+                </div>
+                <div className="flex items-center gap-2 pb-2">
+                  <input type="checkbox" id="overdue-filter" checked={isOverdue} onChange={e => setIsOverdue(e.target.checked)} className="rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+                  <label htmlFor="overdue-filter" className="text-sm font-semibold text-red-500 cursor-pointer">Overdue Only</label>
+                </div>
+              </div>
+
+              <KanbanBoard
+                tasks={tasks}
+                currentUserId={user.id}
+                currentUserRole={user.role}
+                onUpdate={handleTaskUpdate}
+                onDelete={handleTaskDelete}
+                onEdit={handleEditClick}
+              />
+            </>
           ) : (
             <ProjectOverview 
               summaries={projectSummaries} 

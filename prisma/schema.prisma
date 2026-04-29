@@ -25,6 +25,9 @@ model User {
   assignedTasks     Task[]       @relation("TaskAssignee")
   assignedProjectId String?
   assignedProject   Project?     @relation("ProjectAssignment", fields: [assignedProjectId], references: [id])
+  comments          Comment[]
+  activityLogs      ActivityLog[]
+  notifications     Notification[]
 }
 
 
@@ -43,12 +46,20 @@ model Task {
   title       String
   description String?
   status      Status  @default(OPEN)
+  isCompleted Boolean @default(false)
+  dueDate     DateTime?
+  priority    Priority @default(LOW)
   projectId   String
-  project     Project @relation(fields: [projectId], references: [id])
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdBy   String
   creator     User    @relation("TaskCreator", fields: [createdBy], references: [id])
   assigneeId  String?
   assignee    User?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  comments    Comment[]
+  activityLogs ActivityLog[]
+  notifications Notification[]
 }
 
 enum Role {
@@ -60,4 +71,53 @@ enum Status {
   OPEN
   IN_PROGRESS
   CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ActionType {
+  CREATED
+  UPDATED
+  DELETED
+  STATUS_CHANGED
+  ASSIGNED
+  COMMENTED
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  taskId    String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model ActivityLog {
+  id          String     @id @default(uuid())
+  userId      String
+  taskId      String?
+  actionType  ActionType
+  detail      String?
+  createdAt   DateTime   @default(now())
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task        Task?      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  taskId    String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

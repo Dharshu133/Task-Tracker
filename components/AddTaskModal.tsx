@@ -17,10 +17,13 @@ interface Task {
   title: string;
   description: string | null;
   status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  dueDate: string | null;
   createdBy: string;
   assignee: { id: string; email: string; role: string } | null;
   creator: { id: string; email: string; role: string };
   project: { id: string; name: string };
+  _count?: { comments: number };
 }
 
 interface AddTaskModalProps {
@@ -36,6 +39,8 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
   const [description, setDescription] = useState('');
   const [projectId, setProjectId] = useState(projects[0]?.id ?? '');
   const [assigneeId, setAssigneeId] = useState('');
+  const [priority, setPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'>('LOW');
+  const [dueDate, setDueDate] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -70,6 +75,8 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
         description: description.trim() || undefined,
         project_id: projectId,
         assignee_id: assigneeId || undefined,
+        priority,
+        due_date: dueDate ? new Date(dueDate).toISOString() : undefined,
       });
       onCreated(task);
       onClose();
@@ -85,9 +92,9 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="glass-card w-full max-w-lg shadow-2xl shadow-black/50 animate-in fade-in zoom-in-95 duration-200">
+      <div className="glass-card w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl shadow-black/50 animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-300 dark:border-slate-700">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-300 dark:border-slate-700 shrink-0">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Add New Task</h2>
           <button
             onClick={onClose}
@@ -101,7 +108,7 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
         </div>
 
         {/* Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate>
+        <form onSubmit={handleSubmit} className="p-5 space-y-3 overflow-y-auto flex-1" noValidate>
           {error && (
             <div role="alert" className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg">
               {error}
@@ -133,10 +140,40 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Optional task description…"
-              rows={3}
+              rows={2}
               className="input-field resize-none"
               disabled={loading}
             />
+          </div>
+
+          {/* Priority & Due Date */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="task-priority" className="label">Priority</label>
+              <select
+                id="task-priority"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as any)}
+                className="select-field"
+                disabled={loading}
+              >
+                <option value="LOW" className="bg-white dark:bg-slate-900">Low</option>
+                <option value="MEDIUM" className="bg-white dark:bg-slate-900">Medium</option>
+                <option value="HIGH" className="bg-white dark:bg-slate-900">High</option>
+                <option value="CRITICAL" className="bg-white dark:bg-slate-900">Critical</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="task-due-date" className="label">Due Date</label>
+              <input
+                id="task-due-date"
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="input-field"
+                disabled={loading}
+              />
+            </div>
           </div>
 
           {/* Project */}
@@ -176,7 +213,7 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-2 mt-2 sticky bottom-0 bg-white dark:bg-slate-900 p-2 -mx-2 rounded-lg shadow-[0_-10px_10px_-5px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_10px_-5px_rgba(0,0,0,0.2)]">
             <button
               type="button"
               onClick={onClose}

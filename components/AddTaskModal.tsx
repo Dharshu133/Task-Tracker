@@ -169,6 +169,7 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
                 id="task-due-date"
                 type="date"
                 value={dueDate}
+                min={new Date().toISOString().split('T')[0]}
                 onChange={(e) => setDueDate(e.target.value)}
                 className="input-field"
                 disabled={loading}

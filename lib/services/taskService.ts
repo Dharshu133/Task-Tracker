@@ -36,7 +36,16 @@ export const getTasks = async (filters: {
     if (where.project) delete where.project; // Simplify if projectId is present
   }
   if (filters.priority) where.priority = filters.priority;
-  if (filters.due_date) where.dueDate = { lte: new Date(filters.due_date) };
+  if (filters.due_date) {
+    const startOfDay = new Date(filters.due_date);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const endOfDay = new Date(filters.due_date);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+    where.dueDate = {
+      gte: startOfDay,
+      lte: endOfDay
+    };
+  }
   if (filters.is_overdue === 'true') {
     where.dueDate = { lt: new Date() };
     where.isCompleted = false;

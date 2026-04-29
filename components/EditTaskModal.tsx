@@ -28,7 +28,9 @@ interface EditTaskModalProps {
 }
 
 export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose, onUpdated }: EditTaskModalProps) {
-  const [activeTab, setActiveTab] = useState<'DETAILS' | 'COMMENTS' | 'ACTIVITY'>('DETAILS');
+  const [activeTab, setActiveTab] = useState<'DETAILS' | 'COMMENTS' | 'ACTIVITY'>(
+    currentUserRole === 'MEMBER' ? 'COMMENTS' : 'DETAILS'
+  );
 
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || '');
@@ -40,6 +42,7 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
 
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
+  const [replyTo, setReplyTo] = useState<string | null>(null);
   const [loadingData, setLoadingData] = useState(false);
   const [logs, setLogs] = useState<any[]>([]);
 
@@ -95,12 +98,31 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
     if (!newComment.trim()) return;
     setLoading(true);
     try {
-      const c = await api.post<any>(`/api/tasks/${task.id}/comments`, { content: newComment.trim() });
+      const c = await api.post<any>(`/api/tasks/${task.id}/comments`, { 
+        content: newComment.trim(),
+        parentId: replyTo
+      });
       setComments(prev => [...prev, c]);
       setNewComment('');
+      setReplyTo(null);
       onUpdated({ ...task, _count: { comments: (task._count?.comments || 0) + 1 } });
     } catch {
       setError('Failed to add comment');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResolveComment(commentId: string) {
+    if (!window.confirm('Mark this thread as resolved? This will remove the comment and all its replies.')) return;
+    setLoading(true);
+    try {
+      await api.delete(`/api/comments/${commentId}`);
+      setComments(prev => prev.filter(c => c.id !== commentId && c.parentId !== commentId));
+      // Optionally update task comment count, though it's complex to count all sub-comments
+      onUpdated({ ...task }); 
+    } catch {
+      setError('Failed to resolve comment');
     } finally {
       setLoading(false);
     }
@@ -123,7 +145,9 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
 
         {/* Tabs */}
         <div className="flex border-b border-slate-300 dark:border-slate-700 px-6 shrink-0">
-          {(['DETAILS', 'COMMENTS', 'ACTIVITY'] as const).map(tab => (
+          {(['DETAILS', 'COMMENTS', 'ACTIVITY'] as const)
+            .filter(tab => currentUserRole === 'ADMIN' || tab === 'COMMENTS')
+            .map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -162,7 +186,7 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
                 </div>
                 <div>
                   <label className="label">Due Date</label>
-                  <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="input-field" disabled={loading} />
+                  <input type="date" value={dueDate} min={new Date().toISOString().split('T')[0]} onChange={e => setDueDate(e.target.value)} className="input-field" disabled={loading} />
                 </div>
               </div>
 
@@ -180,23 +204,81 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
 
           {activeTab === 'COMMENTS' && (
             <div className="space-y-4 h-full flex flex-col">
-              <div className="flex-1 space-y-3">
+              <div className="flex-1 space-y-4 overflow-y-auto">
                 {loadingData ? <p className="text-sm text-slate-500">Loading comments...</p> : 
                  comments.length === 0 ? <p className="text-sm text-slate-500">No comments yet. Start the conversation!</p> :
-                 comments.map(c => (
-                  <div key={c.id} className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="font-semibold text-xs text-brand-500">@{c.user.email.split('@')[0]}</span>
-                      <span className="text-[10px] text-slate-500">{new Date(c.createdAt).toLocaleString()}</span>
+                 comments.filter(c => !c.parentId).map(parent => (
+                  <div key={parent.id} className="space-y-2">
+                    <div className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm">
+                      <div className="flex justify-between items-center mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${parent.user.role === 'ADMIN' ? 'bg-purple-500/10 text-purple-500' : 'bg-brand-500/10 text-brand-500'}`}>
+                            {parent.user.role}
+                          </span>
+                          <span className="font-semibold text-xs text-slate-900 dark:text-white">@{parent.user.email.split('@')[0]}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-500">{new Date(parent.createdAt).toLocaleString()}</span>
+                      </div>
+                      <p className="text-sm text-slate-800 dark:text-slate-200">{parent.content}</p>
+                      
+                      <div className="mt-2 flex justify-end gap-2">
+                        {currentUserRole === 'MEMBER' && parent.user.role === 'ADMIN' && (
+                          <button 
+                            onClick={() => setReplyTo(replyTo === parent.id ? null : parent.id)}
+                            className="text-[10px] font-semibold text-brand-500 hover:underline"
+                          >
+                            {replyTo === parent.id ? 'Cancel Reply' : 'Reply to Admin'}
+                          </button>
+                        )}
+                        {currentUserRole === 'ADMIN' && (
+                          <button 
+                            onClick={() => handleResolveComment(parent.id)}
+                            className="text-[10px] font-semibold text-emerald-500 hover:underline"
+                          >
+                            Resolve Thread
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-sm text-slate-800 dark:text-slate-200">{c.content}</p>
+
+                    {/* Replies */}
+                    <div className="ml-6 space-y-2 border-l-2 border-slate-100 dark:border-slate-800 pl-4">
+                      {comments.filter(c => c.parentId === parent.id).map(reply => (
+                        <div key={reply.id} className="p-2 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-lg">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="font-semibold text-[11px] text-slate-700 dark:text-slate-300">@{reply.user.email.split('@')[0]}</span>
+                            <span className="text-[9px] text-slate-500">{new Date(reply.createdAt).toLocaleTimeString()}</span>
+                          </div>
+                          <p className="text-xs text-slate-700 dark:text-slate-300">{reply.content}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                  ))
                 }
               </div>
-              <form onSubmit={handleAddComment} className="mt-4 flex gap-2">
-                <input type="text" value={newComment} onChange={e => setNewComment(e.target.value)} placeholder="Type a comment..." className="input-field" disabled={loading} />
-                <button type="submit" className="btn-primary shrink-0" disabled={loading || !newComment.trim()}>Send</button>
+              
+              <form onSubmit={handleAddComment} className="mt-4 flex flex-col gap-2 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                {replyTo && (
+                  <div className="flex items-center justify-between px-2 py-1 bg-brand-500/10 rounded text-[10px] text-brand-500 font-semibold">
+                    <span>Replying to @{comments.find(c => c.id === replyTo)?.user.email.split('@')[0]}</span>
+                    <button onClick={() => setReplyTo(null)} className="hover:text-brand-700">✕</button>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    value={newComment} 
+                    onChange={e => setNewComment(e.target.value)} 
+                    placeholder={replyTo ? "Type your reply..." : "Type a comment..."} 
+                    className="input-field flex-1" 
+                    disabled={loading} 
+                    autoFocus={!!replyTo}
+                  />
+                  <button type="submit" className="btn-primary shrink-0" disabled={loading || !newComment.trim()}>
+                    {replyTo ? 'Reply' : 'Send'}
+                  </button>
+                </div>
               </form>
             </div>
           )}

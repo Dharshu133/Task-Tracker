@@ -106,14 +106,35 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
       onDragStart={(e) => {
         e.dataTransfer.setData('taskId', task.id);
       }}
-      className={`glass-card p-4 group transition-all duration-200 hover:border-slate-600/80 hover:shadow-lg hover:shadow-black/20 cursor-grab active:cursor-grabbing ${
+      onClick={() => onEdit(task)}
+      className={`relative glass-card p-4 group transition-all duration-200 hover:border-slate-600/80 hover:shadow-lg hover:shadow-black/20 cursor-pointer active:cursor-grabbing ${
         localStatus === 'CLOSED' ? 'opacity-60' : ''
       }`}
     >
+      {/* Comment Box - Top Right (Members only) */}
+      {currentUserRole === 'MEMBER' && (
+        <div 
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(task);
+          }}
+          className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 bg-brand-500/10 hover:bg-brand-500/20 text-brand-500 rounded border border-brand-500/20 transition-all cursor-pointer z-10"
+        >
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          <span className="text-[10px] font-bold">
+            {task._count?.comments || 0}
+          </span>
+        </div>
+      )}
       <div className="flex items-start gap-3">
         {/* Checkbox */}
         <button
-          onClick={handleCheckbox}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCheckbox();
+          }}
           disabled={!canUpdateStatus}
           className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
             localStatus === 'CLOSED'
@@ -154,6 +175,7 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
             </span>
           </div>
 
+
           {/* Priority & Due Date */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${PRIORITY_COLORS[task.priority] || 'bg-slate-100 text-slate-500'}`}>
@@ -164,26 +186,23 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
                 ⏳ {new Date(task.dueDate).toLocaleDateString()}
               </span>
             )}
-            {task._count && task._count.comments > 0 && (
-               <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full">
-                 💬 {task._count.comments}
-               </span>
-            )}
           </div>
 
-          {/* Status dropdown */}
-          <select
-            value={localStatus}
-            disabled={!canUpdateStatus}
-            onChange={(e) => handleStatusChange(e.target.value as Task['status'])}
-            className={`text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors ${currentStatusMeta.color} ${!canUpdateStatus ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-          >
-            {STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value} className="text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900">
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center justify-between mt-auto">
+            <select
+              value={localStatus}
+              disabled={!canUpdateStatus}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => handleStatusChange(e.target.value as Task['status'])}
+              className={`text-[10px] font-bold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors ${currentStatusMeta.color} ${!canUpdateStatus ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+            >
+              {STATUS_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value} className="text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900">
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Actions */}
@@ -191,7 +210,10 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
           {/* Edit button */}
           {canFullEdit && (
             <button
-              onClick={() => onEdit(task)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(task);
+              }}
               className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-500 dark:text-slate-400 hover:text-brand-400 hover:bg-brand-500/10 rounded-lg transition-all duration-200 shrink-0"
               aria-label="Edit task"
             >
@@ -204,7 +226,10 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
           {/* Delete button */}
           {canFullEdit && (
             <button
-              onClick={handleDelete}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete();
+              }}
               disabled={isDeleting}
               className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200 shrink-0"
               aria-label="Delete task"

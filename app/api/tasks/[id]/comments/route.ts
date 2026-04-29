@@ -28,7 +28,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return NextResponse.json({ success: false, error: parsed.error.issues[0].message }, { status: 400 });
     }
 
-    const comment = await createComment(id, userId, parsed.data.content);
+    const comment = await createComment(id, userId, parsed.data.content, parsed.data.parentId);
     return NextResponse.json({ success: true, data: comment }, { status: 201 });
   } catch (error: any) {
     console.error('[POST /api/tasks/[id]/comments]', error);

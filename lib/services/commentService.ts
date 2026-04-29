@@ -6,18 +6,22 @@ export const getComments = async (taskId: string) => {
     where: { taskId },
     orderBy: { createdAt: 'asc' },
     include: {
-      user: { select: { id: true, email: true } }
+      user: { select: { id: true, email: true, role: true } }
     }
   });
 };
 
-export const createComment = async (taskId: string, userId: string, content: string) => {
+export const createComment = async (taskId: string, userId: string, content: string, parentId?: string | null) => {
   return await prisma.$transaction(async (tx) => {
     const comment = await tx.comment.create({
       data: {
         taskId,
         userId,
-        content
+        content,
+        parentId: parentId || null
+      },
+      include: {
+        user: { select: { id: true, email: true, role: true } }
       }
     });
 
@@ -28,11 +32,22 @@ export const createComment = async (taskId: string, userId: string, content: str
         taskId,
         userId,
         actionType: ActionType.COMMENTED,
-        detail: JSON.stringify({ content })
+        detail: JSON.stringify({ content, parentId })
       }
     });
 
-    if (task?.assigneeId && task.assigneeId !== userId) {
+    if (parentId) {
+      const parentComment = await tx.comment.findUnique({ where: { id: parentId } });
+      if (parentComment && parentComment.userId !== userId) {
+        await tx.notification.create({
+          data: {
+            userId: parentComment.userId,
+            taskId,
+            message: `Someone replied to your comment on task: ${task?.title}`
+          }
+        });
+      }
+    } else if (task?.assigneeId && task.assigneeId !== userId) {
       await tx.notification.create({
         data: {
           userId: task.assigneeId,

@@ -10,6 +10,8 @@ import EditTaskModal from '@/components/EditTaskModal';
 import AddProjectModal from '@/components/AddProjectModal';
 import ProjectOverview from '@/components/ProjectOverview';
 import AddUserModal from '@/components/AddUserModal';
+import EditUserModal from '@/components/EditUserModal';
+import Toast from '@/components/Toast';
 import { api } from '@/lib/api';
 
 interface UserInfo {
@@ -40,6 +42,7 @@ interface OrgUser {
   id: string;
   email: string;
   role: string;
+  assignedProjectId?: string | null;
 }
 
 interface Task {
@@ -71,8 +74,11 @@ export default function DashboardPage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<OrgUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   // Filters
   const [keyword, setKeyword] = useState('');
@@ -165,19 +171,19 @@ export default function DashboardPage() {
 
   function handleTaskUpdate(updated: Task) {
     setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
-    // If on dashboard, refresh summaries
+    setToast({ message: 'Task updated successfully', type: 'success' });
     if (activeProjectId === null) fetchSummaries();
   }
 
   function handleTaskDelete(id: string) {
     setTasks((prev) => prev.filter((t) => t.id !== id));
-    // If on dashboard, refresh summaries
+    setToast({ message: 'Task deleted successfully', type: 'success' });
     if (activeProjectId === null) fetchSummaries();
   }
 
   function handleTaskCreated(task: Task) {
     setTasks((prev) => [task, ...prev]);
-    // If on dashboard, refresh summaries
+    setToast({ message: 'Task created successfully', type: 'success' });
     if (activeProjectId === null) fetchSummaries();
   }
 
@@ -188,6 +194,7 @@ export default function DashboardPage() {
 
   function handleProjectCreated(project: Project) {
     setProjects((prev) => [...prev, project].sort((a, b) => a.name.localeCompare(b.name)));
+    setToast({ message: 'Project created successfully', type: 'success' });
     fetchSummaries();
   }
 
@@ -198,11 +205,13 @@ export default function DashboardPage() {
       await api.delete(`/api/projects/${id}`);
       setProjects((prev) => prev.filter((p) => p.id !== id));
       setProjectSummaries((prev) => prev.filter((s) => s.id !== id));
+      setToast({ message: 'Project deleted successfully', type: 'success' });
       if (activeProjectId === id) {
         setActiveProjectId(null);
       }
     } catch (err) {
       setError('Failed to delete project.');
+      setToast({ message: 'Failed to delete project', type: 'error' });
       console.error(err);
     }
   }
@@ -210,6 +219,23 @@ export default function DashboardPage() {
   function handleProjectSelect(id: string | null) {
     setActiveProjectId(id);
     setSidebarOpen(false);
+  }
+
+  function handleUserUpdate(updated: OrgUser) {
+    setOrgUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+    setToast({ message: 'User updated successfully', type: 'success' });
+  }
+
+  async function handleUserDelete(id: string) {
+    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    try {
+      await api.delete(`/api/users/${id}`);
+      setOrgUsers((prev) => prev.filter((u) => u.id !== id));
+      setToast({ message: 'User deleted successfully', type: 'success' });
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete user');
+      setToast({ message: 'Failed to delete user', type: 'error' });
+    }
   }
 
   const activeProjectName =
@@ -307,6 +333,7 @@ export default function DashboardPage() {
                     <th className="px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">User</th>
                     <th className="px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Role</th>
                     <th className="px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
@@ -332,6 +359,31 @@ export default function DashboardPage() {
                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                           Active
                         </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => {
+                              setEditingUser(u);
+                              setShowEditUserModal(true);
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-brand-500 transition-colors" 
+                            title="Edit User"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+                          <button 
+                            onClick={() => handleUserDelete(u.id)}
+                            className="p-1.5 text-slate-400 hover:text-red-500 transition-colors" 
+                            title="Delete User"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -426,6 +478,26 @@ export default function DashboardPage() {
           onCreated={(newUser) => {
             setOrgUsers((prev) => [...prev, newUser].sort((a, b) => a.email.localeCompare(b.email)));
           }}
+        />
+      )}
+
+      {/* Edit User Modal */}
+      {showEditUserModal && editingUser && (
+        <EditUserModal
+          user={editingUser}
+          onClose={() => {
+            setShowEditUserModal(false);
+            setEditingUser(null);
+          }}
+          onUpdated={handleUserUpdate}
+        />
+      )}
+
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)} 
         />
       )}
 

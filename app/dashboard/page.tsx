@@ -481,6 +481,7 @@ export default function DashboardPage() {
           onClose={() => setShowAddUserModal(false)}
           onCreated={(newUser) => {
             setOrgUsers((prev) => [...prev, newUser].sort((a, b) => a.email.localeCompare(b.email)));
+            setToast({ message: 'User created successfully', type: 'success' });
           }}
         />
       )}

@@ -101,7 +101,7 @@ export default function TaskColumn({
       </div>
 
       {/* Tasks */}
-      <div className="kanban-column flex-1">
+      <div className="kanban-column flex-1 flex flex-col gap-4">
         {tasks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-slate-700">
             <svg className="w-10 h-10 mb-2 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -64,7 +64,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="glass-card p-10 border-border/50 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)]">
+        <div className="bg-card p-10 rounded-3xl border border-border shadow-2xl dark:shadow-none transition-colors duration-300">
           <form onSubmit={handleSubmit} className="space-y-6" noValidate>
             {/* Error Banner */}
             {error && (

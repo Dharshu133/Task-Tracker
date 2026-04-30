@@ -43,93 +43,108 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 relative overflow-hidden">
-      {/* Background gradient blobs */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-brand-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen flex items-center justify-center mesh-gradient px-4 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-500/20 rounded-full blur-[120px] animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/20 rounded-full blur-[120px] animate-pulse" />
 
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-[440px]">
         {/* Logo & Title */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-600 mb-4 shadow-lg shadow-brand-600/30">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-[24px] bg-gradient-to-br from-brand-500 to-brand-700 mb-6 shadow-2xl shadow-brand-500/40 relative group">
+            <div className="absolute inset-0 bg-brand-400 rounded-[24px] blur-md opacity-0 group-hover:opacity-50 transition-opacity" />
+            <svg className="w-9 h-9 text-white relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Task Tracker</h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2 text-sm">Sign in to your workspace</p>
+          <h1 className="text-4xl font-black text-white tracking-tight mb-2 text-glow">
+            Task<span className="text-brand-400">Tracker</span>
+          </h1>
+          <p className="text-slate-400 font-medium text-sm uppercase tracking-[0.2em]">Enterprise Workspace</p>
         </div>
 
         {/* Card */}
-        <div className="glass-card p-8 shadow-2xl shadow-black/40">
-          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+        <div className="glass-card p-10 border-white/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)]">
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
             {/* Error Banner */}
             {error && (
               <div
                 role="alert"
-                className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg flex items-center gap-2"
+                className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold px-4 py-3 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300"
               >
-                <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 {error}
               </div>
             )}
 
             {/* Email */}
-            <div>
-              <label htmlFor="email" className="label">Email address</label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@company.com"
-                className="input-field"
-                disabled={loading}
-              />
+            <div className="space-y-2">
+              <label htmlFor="email" className="label text-slate-300">Email Address</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-brand-500 transition-colors">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" />
+                  </svg>
+                </div>
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@company.com"
+                  className="input-field pl-11 bg-white/5 border-white/5 text-white placeholder-slate-500 hover:bg-white/10 focus:bg-white/10 transition-all"
+                  disabled={loading}
+                />
+              </div>
             </div>
 
             {/* Password */}
-            <div>
-              <label htmlFor="password" className="label">Password</label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="input-field"
-                disabled={loading}
-              />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <label htmlFor="password" className="label text-slate-300">Password</label>
+                <a href="#" className="text-[10px] font-bold text-brand-400 hover:text-brand-300 uppercase tracking-widest transition-colors">Forgot?</a>
+              </div>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-brand-500 transition-colors">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="input-field pl-11 bg-white/5 border-white/5 text-white placeholder-slate-500 hover:bg-white/10 focus:bg-white/10 transition-all"
+                  disabled={loading}
+                />
+              </div>
             </div>
 
             {/* Submit */}
             <button
               id="login-submit"
               type="submit"
-              className="btn-primary w-full mt-2"
+              className="btn-primary w-full h-[52px] text-base font-black uppercase tracking-widest shadow-[0_20px_40px_-12px_rgba(92,124,250,0.5)] active:shadow-none transition-all"
               disabled={loading}
             >
               {loading ? (
-                <>
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                <div className="flex items-center gap-3">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                   Signing in…
-                </>
+                </div>
               ) : 'Sign in'}
             </button>
           </form>
         </div>
-
-        {/* Demo hint */}
-        <p className="text-center text-slate-500 dark:text-slate-400 text-xs mt-6">
-          Use seeded credentials: <span className="text-slate-500">admin@acme.com / password123</span>
-        </p>
       </div>
     </div>
   );

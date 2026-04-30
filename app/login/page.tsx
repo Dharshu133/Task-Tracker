@@ -81,7 +81,7 @@ export default function LoginPage() {
 
             {/* Email */}
             <div className="space-y-2">
-              <label htmlFor="email" className="label text-slate-300">Email Address</label>
+              <label htmlFor="email" className="label text-black">Email Address</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-brand-500 transition-colors">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -95,7 +95,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
-                  className="input-field pl-11 bg-white/5 border-white/5 text-white placeholder-slate-500 hover:bg-white/10 focus:bg-white/10 transition-all"
+                  className="input-field pl-11 bg-white dark:bg-white/5 border-slate-300 dark:border-white/5 text-black dark:text-white placeholder-slate-500 dark:placeholder-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 focus:bg-white dark:focus:bg-white/10 transition-all"
                   disabled={loading}
                 />
               </div>
@@ -103,10 +103,7 @@ export default function LoginPage() {
 
             {/* Password */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between px-1">
-                <label htmlFor="password" className="label text-slate-300">Password</label>
-                <a href="#" className="text-[10px] font-bold text-brand-400 hover:text-brand-300 uppercase tracking-widest transition-colors">Forgot?</a>
-              </div>
+              <label htmlFor="password" className="label text-black">Password</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-brand-500 transition-colors">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -120,9 +117,12 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="input-field pl-11 bg-white/5 border-white/5 text-white placeholder-slate-500 hover:bg-white/10 focus:bg-white/10 transition-all"
+                  className="input-field pl-11 bg-white dark:bg-white/5 border-slate-300 dark:border-white/5 text-black dark:text-white placeholder-slate-500 dark:placeholder-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 focus:bg-white dark:focus:bg-white/10 transition-all"
                   disabled={loading}
                 />
+              </div>
+              <div className="flex justify-end px-1">
+                <a href="#" className="text-[10px] font-bold text-brand-400 hover:text-brand-500 uppercase tracking-widest transition-colors">Forgot Password?</a>
               </div>
             </div>
 

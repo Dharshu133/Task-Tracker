@@ -3,8 +3,71 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 226 80% 64%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 226 80% 64%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 226 80% 64%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 226 80% 64%;
+  }
+
   *, *::before, *::after {
     box-sizing: border-box;
+    border-color: hsl(var(--border));
   }
 
   html {
@@ -13,7 +76,7 @@
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 dark:bg-[#020617] dark:text-slate-100 min-h-screen selection:bg-brand-500/30;
+    @apply bg-background text-foreground min-h-screen selection:bg-primary/30;
   }
 
   ::-webkit-scrollbar {
@@ -30,45 +93,45 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200/50 dark:border-white/5 rounded-2xl 
+    @apply bg-card/70 backdrop-blur-md border border-border/50 rounded-2xl 
            shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)];
   }
 
   .btn-primary {
-    @apply bg-brand-600 hover:bg-brand-500 text-white font-semibold px-5 py-2.5 rounded-xl
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-5 py-2.5 rounded-xl
            transition-all duration-300 min-h-[44px] flex items-center justify-center gap-2
-           shadow-lg shadow-brand-600/20 hover:shadow-brand-600/40 active:scale-[0.98]
-           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-950
+           shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-[0.98]
+           focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background
            disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100;
   }
 
   .btn-ghost {
-    @apply text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 font-medium px-4 py-2.5 rounded-xl
+    @apply text-muted-foreground hover:text-foreground hover:bg-accent font-medium px-4 py-2.5 rounded-xl
            transition-all duration-300 min-h-[44px] flex items-center justify-center gap-2 active:scale-[0.98]
-           focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-950;
+           focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background;
   }
 
   .btn-danger {
-    @apply bg-red-600/10 hover:bg-red-600/20 text-red-600 dark:text-red-400 font-medium px-4 py-2 rounded-xl
+    @apply bg-destructive/10 hover:bg-destructive/20 text-destructive font-medium px-4 py-2 rounded-xl
            transition-all duration-300 min-h-[44px] flex items-center justify-center active:scale-[0.98]
-           focus:outline-none focus:ring-2 focus:ring-red-500/50;
+           focus:outline-none focus:ring-2 focus:ring-destructive/50;
   }
 
   .input-field {
-    @apply w-full bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600
+    @apply w-full bg-background/50 border border-input text-foreground placeholder-muted-foreground
            rounded-xl px-4 py-3 text-sm transition-all duration-300
-           focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500
-           hover:border-slate-300 dark:hover:border-slate-700;
+           focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary
+           hover:border-accent-foreground/20;
   }
 
   .select-field {
-    @apply w-full bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100
+    @apply w-full bg-background/50 border border-input text-foreground
            rounded-xl px-4 py-3 text-sm transition-all duration-300 cursor-pointer
-           focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500;
+           focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary;
   }
 
   .label {
-    @apply block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 ml-1;
+    @apply block text-sm font-semibold text-foreground/80 mb-1.5 ml-1;
   }
 
   .sidebar-item {
@@ -77,11 +140,11 @@
   }
 
   .sidebar-item-active {
-    @apply bg-brand-600/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 shadow-sm shadow-brand-500/5;
+    @apply bg-primary/10 text-primary border border-primary/20 shadow-sm shadow-primary/5;
   }
 
   .sidebar-item-inactive {
-    @apply text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200;
+    @apply text-muted-foreground hover:bg-accent hover:text-foreground;
   }
 }
 

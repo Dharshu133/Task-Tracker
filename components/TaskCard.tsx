@@ -39,10 +39,10 @@ const STATUS_OPTIONS: { value: Task['status']; label: string; color: string }[] 
 ];
 
 const PRIORITY_COLORS: Record<string, string> = {
-  LOW: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
-  MEDIUM: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-  HIGH: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
-  CRITICAL: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+  LOW: 'bg-muted text-muted-foreground',
+  MEDIUM: 'bg-primary/10 text-primary',
+  HIGH: 'bg-amber-500/10 text-amber-500',
+  CRITICAL: 'bg-destructive/10 text-destructive',
 };
 
 function isOverdue(dateString: string, status: Task['status']) {
@@ -107,7 +107,7 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
         e.dataTransfer.setData('taskId', task.id);
       }}
       onClick={() => onEdit(task)}
-      className={`relative glass-card p-4 group transition-all duration-200 hover:border-slate-600/80 hover:shadow-lg hover:shadow-black/20 cursor-pointer active:cursor-grabbing ${
+      className={`relative glass-card p-4 group transition-all duration-200 hover:border-primary/50 hover:shadow-lg hover:shadow-black/20 cursor-pointer active:cursor-grabbing ${
         localStatus === 'CLOSED' ? 'opacity-60' : ''
       }`}
     >
@@ -118,7 +118,7 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
             e.stopPropagation();
             onEdit(task);
           }}
-          className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 bg-brand-500/10 hover:bg-brand-500/20 text-brand-500 rounded border border-brand-500/20 transition-all cursor-pointer z-10"
+          className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 hover:bg-primary/20 text-primary rounded border border-primary/20 transition-all cursor-pointer z-10"
         >
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -139,7 +139,7 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
           className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
             localStatus === 'CLOSED'
               ? 'bg-emerald-500 border-emerald-500'
-              : 'border-slate-600 ' + (canUpdateStatus ? 'hover:border-brand-500' : 'cursor-not-allowed opacity-50')
+              : 'border-input ' + (canUpdateStatus ? 'hover:border-primary' : 'cursor-not-allowed opacity-50')
           }`}
           aria-label={localStatus === 'CLOSED' ? 'Mark as open' : 'Mark as closed'}
         >
@@ -152,13 +152,13 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
 
         <div className="flex-1 min-w-0">
           {/* Title */}
-          <p className={`font-semibold text-sm leading-snug mb-1 ${localStatus === 'CLOSED' ? 'line-through text-slate-500' : 'text-slate-900 dark:text-slate-100'}`}>
+          <p className={`font-semibold text-sm leading-snug mb-1 ${localStatus === 'CLOSED' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
             {task.title}
           </p>
 
           {/* Description */}
           {task.description && (
-            <p className="text-slate-500 text-xs leading-relaxed line-clamp-2 mb-2">
+            <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2 mb-2">
               {task.description}
             </p>
           )}
@@ -166,11 +166,11 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
           {/* Assignee & Project */}
           <div className="flex flex-wrap items-center gap-2 mb-2">
             {task.assignee && (
-              <span className="inline-flex items-center gap-1 text-xs text-brand-400 bg-brand-600/10 px-2 py-0.5 rounded-full">
-                <span className="text-brand-500">@</span>{task.assignee.email.split('@')[0]}
+              <span className="inline-flex items-center gap-1 text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                <span className="text-primary">@</span>{task.assignee.email.split('@')[0]}
               </span>
             )}
-            <span className="inline-flex items-center gap-1 text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
               📁 {task.project.name}
             </span>
           </div>
@@ -178,11 +178,11 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
 
           {/* Priority & Due Date */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${PRIORITY_COLORS[task.priority] || 'bg-slate-100 text-slate-500'}`}>
+            <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${PRIORITY_COLORS[task.priority] || 'bg-muted'}`}>
               {task.priority}
             </span>
             {task.dueDate && (
-              <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${isOverdue(task.dueDate, localStatus) ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+              <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${isOverdue(task.dueDate, localStatus) ? 'bg-destructive/10 text-destructive border border-destructive/20' : 'bg-muted text-muted-foreground'}`}>
                 ⏳ {new Date(task.dueDate).toLocaleDateString()}
               </span>
             )}
@@ -194,7 +194,7 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
               disabled={!canUpdateStatus}
               onClick={(e) => e.stopPropagation()}
               onChange={(e) => handleStatusChange(e.target.value as Task['status'])}
-              className={`text-[10px] font-bold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors ${currentStatusMeta.color} ${!canUpdateStatus ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+              className={`text-[10px] font-bold bg-card border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring transition-colors ${currentStatusMeta.color} ${!canUpdateStatus ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
             >
               {STATUS_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value} className="text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900">
@@ -211,10 +211,10 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
           {canFullEdit && (
             <button
               onClick={(e) => {
-                e.stopPropagation();
+                 e.stopPropagation();
                 onEdit(task);
               }}
-              className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-500 dark:text-slate-400 hover:text-brand-400 hover:bg-brand-500/10 rounded-lg transition-all duration-200 shrink-0"
+              className="opacity-0 group-hover:opacity-100 p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all duration-200 shrink-0"
               aria-label="Edit task"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -227,15 +227,15 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
           {canFullEdit && (
             <button
               onClick={(e) => {
-                e.stopPropagation();
+                 e.stopPropagation();
                 handleDelete();
               }}
               disabled={isDeleting}
-              className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200 shrink-0"
+              className="opacity-0 group-hover:opacity-100 p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all duration-200 shrink-0"
               aria-label="Delete task"
             >
               {isDeleting ? (
-                <svg className="animate-spin w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin w-4 h-4 text-destructive" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>

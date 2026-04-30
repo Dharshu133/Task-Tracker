@@ -285,7 +285,7 @@ export default function DashboardPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header user={user} onMenuToggle={() => setSidebarOpen((o) => !o)} />
 
       <div className="flex flex-1 overflow-hidden">
@@ -306,8 +306,8 @@ export default function DashboardPage() {
           {/* Page header */}
           <div className="flex items-start sm:items-center justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">{activeProjectName}</h1>
-              <p className="text-slate-500 text-sm mt-0.5">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">{activeProjectName}</h1>
+              <p className="text-muted-foreground text-sm mt-0.5">
                 {activeProjectId === ('USERS_VIEW' as any)
                   ? `Manage the ${orgUsers.length} users in your organization`
                   : activeProjectId === ('ACTIVITY_LOG' as any)
@@ -350,7 +350,7 @@ export default function DashboardPage() {
 
           {/* Error */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg mb-4">
+            <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm px-4 py-3 rounded-lg mb-4">
               {error}
             </div>
           )}
@@ -359,10 +359,10 @@ export default function DashboardPage() {
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 p-4">
-                  <div className="h-4 w-24 bg-slate-100 dark:bg-slate-800 rounded animate-pulse mb-4" />
+                <div key={i} className="rounded-xl border border-border bg-card/40 p-4">
+                  <div className="h-4 w-24 bg-muted rounded animate-pulse mb-4" />
                   {[0, 1, 2].map((j) => (
-                    <div key={j} className="h-20 bg-slate-100 dark:bg-slate-800/60 rounded-xl mb-3 animate-pulse" />
+                    <div key={j} className="h-20 bg-muted/60 rounded-xl mb-3 animate-pulse" />
                   ))}
                 </div>
               ))}
@@ -371,54 +371,53 @@ export default function DashboardPage() {
             <div className="glass-card overflow-hidden">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">
-                    <th className="px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">User</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Role</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
+                  <tr className="border-b border-border bg-card/50">
+                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">User</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-border">
                   {orgUsers.map((u) => (
                     <tr key={u.id} className="hover:bg-white dark:bg-slate-900/30 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-brand-600/20 flex items-center justify-center text-brand-400 font-bold text-xs">
+                          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
                             {u.email[0].toUpperCase()}
                           </div>
-                          <span className="text-slate-900 dark:text-white font-medium">{u.email}</span>
+                          <span className="text-foreground font-medium">{u.email}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-2 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase ${
-                          u.role === 'ADMIN' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : 'bg-brand-500/10 text-brand-400 border border-brand-500/20'
+                          u.role === 'ADMIN' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : 'bg-primary/10 text-primary border border-primary/20'
                         }`}>
                           {u.role}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                           Active
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button 
-                            onClick={() => {
+                          <button                             onClick={() => {
                               setEditingUser(u);
                               setShowEditUserModal(true);
                             }}
-                            className="p-1.5 text-slate-400 hover:text-brand-500 transition-colors" 
+                            className="p-1.5 text-muted-foreground hover:text-primary transition-colors" 
                             title="Edit User"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                             </svg>
                           </button>
-                          <button 
+                           <button 
                             onClick={() => handleUserDelete(u.id)}
-                            className="p-1.5 text-slate-400 hover:text-red-500 transition-colors" 
+                            className="p-1.5 text-muted-foreground hover:text-destructive transition-colors" 
                             title="Delete User"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -444,13 +443,13 @@ export default function DashboardPage() {
             />
           ) : activeProjectId ? (
             <>
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 mb-6 flex flex-wrap gap-4 items-end">
-                <div className="flex-1 min-w-[200px]">
-                  <label className="text-xs font-semibold text-slate-500 mb-1 block">Search</label>
+              <div className="bg-card border border-border rounded-xl p-4 mb-6 flex flex-wrap gap-4 items-end">
+                 <div className="flex-1 min-w-[200px]">
+                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">Search</label>
                   <input type="text" placeholder="Search tasks..." value={keyword} onChange={e => setKeyword(e.target.value)} className="input-field py-1.5" />
                 </div>
-                <div className="w-32">
-                  <label className="text-xs font-semibold text-slate-500 mb-1 block">Priority</label>
+                 <div className="w-32">
+                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">Priority</label>
                   <select value={priority} onChange={e => setPriority(e.target.value)} className="select-field py-1.5">
                     <option value="">All</option>
                     <option value="LOW">Low</option>
@@ -459,13 +458,13 @@ export default function DashboardPage() {
                     <option value="CRITICAL">Critical</option>
                   </select>
                 </div>
-                <div className="w-40">
-                  <label className="text-xs font-semibold text-slate-500 mb-1 block">Due Date</label>
+                 <div className="w-40">
+                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">Due Date</label>
                   <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="input-field py-1.5" />
                 </div>
-                <div className="flex items-center gap-2 pb-2">
-                  <input type="checkbox" id="overdue-filter" checked={isOverdue} onChange={e => setIsOverdue(e.target.checked)} className="rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
-                  <label htmlFor="overdue-filter" className="text-sm font-semibold text-red-500 cursor-pointer">Overdue Only</label>
+                 <div className="flex items-center gap-2 pb-2">
+                  <input type="checkbox" id="overdue-filter" checked={isOverdue} onChange={e => setIsOverdue(e.target.checked)} className="rounded border-input text-primary focus:ring-ring" />
+                  <label htmlFor="overdue-filter" className="text-sm font-semibold text-destructive cursor-pointer">Overdue Only</label>
                 </div>
               </div>
 

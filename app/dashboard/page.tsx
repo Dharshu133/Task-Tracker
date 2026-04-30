@@ -445,11 +445,11 @@ export default function DashboardPage() {
             <>
               <div className="bg-card border border-border rounded-xl p-4 mb-6 flex flex-wrap gap-4 items-end">
                  <div className="flex-1 min-w-[200px]">
-                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">Search</label>
+                  <label className="label block">Search</label>
                   <input type="text" placeholder="Search tasks..." value={keyword} onChange={e => setKeyword(e.target.value)} className="input-field py-1.5" />
                 </div>
                  <div className="w-32">
-                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">Priority</label>
+                  <label className="label block">Priority</label>
                   <select value={priority} onChange={e => setPriority(e.target.value)} className="select-field py-1.5">
                     <option value="">All</option>
                     <option value="LOW">Low</option>
@@ -459,7 +459,7 @@ export default function DashboardPage() {
                   </select>
                 </div>
                  <div className="w-40">
-                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">Due Date</label>
+                  <label className="label block">Due Date</label>
                   <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="input-field py-1.5" />
                 </div>
                  <div className="flex items-center gap-2 pb-2">

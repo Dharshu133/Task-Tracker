@@ -44,10 +44,10 @@ export default function AddProjectModal({ orgId, onClose, onCreated }: AddProjec
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl transition-all">
+      <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-card border border-border shadow-2xl transition-all">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Create New Project</h3>
+            <h3 className="text-xl font-bold text-foreground">Create New Project</h3>
             <button
               onClick={onClose}
               className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
@@ -60,7 +60,7 @@ export default function AddProjectModal({ orgId, onClose, onCreated }: AddProjec
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="projectName" className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">
+              <label htmlFor="projectName" className="label">
                 Project Name
               </label>
               <input
@@ -71,12 +71,12 @@ export default function AddProjectModal({ orgId, onClose, onCreated }: AddProjec
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Q4 Marketing Campaign"
-                className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all"
+                className="input-field"
               />
             </div>
 
             {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
                 {error}
               </div>
             )}
@@ -85,14 +85,14 @@ export default function AddProjectModal({ orgId, onClose, onCreated }: AddProjec
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-all"
+                className="btn-ghost flex-1"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading || !name.trim()}
-                className="flex-1 px-4 py-3 rounded-xl bg-brand-500 text-white font-bold hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-brand-500/25"
+                className="btn-primary flex-1"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">

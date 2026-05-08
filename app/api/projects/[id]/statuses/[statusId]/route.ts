@@ -52,6 +52,7 @@ export async function DELETE(
     }
 
     const { statusId, id: projectId } = params;
+    console.log(`[DELETE] Request params: statusId=${statusId}, projectId=${projectId}`);
 
     // Check if status exists and belongs to project
     const existingStatus = await prisma.projectTaskStatus.findUnique({
@@ -60,7 +61,16 @@ export async function DELETE(
     });
 
     if (!existingStatus) {
-      return NextResponse.json({ error: 'STATUS_NOT_FOUND' }, { status: 404 });
+      console.log(`[DELETE] Status ${statusId} not found at all.`);
+      return NextResponse.json({ error: 'STATUS_NOT_FOUND', detail: 'Status ID not found in database' }, { status: 404 });
+    }
+
+    if (existingStatus.projectId !== projectId) {
+      console.log(`[DELETE] Status ${statusId} belongs to project ${existingStatus.projectId}, but URL specified project ${projectId}`);
+      return NextResponse.json({ 
+        error: 'PROJECT_MISMATCH', 
+        detail: `Status belongs to ${existingStatus.projectId}, not ${projectId}` 
+      }, { status: 400 });
     }
 
     // Check if tasks are assigned

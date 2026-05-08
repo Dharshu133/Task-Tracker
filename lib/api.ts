@@ -24,6 +24,10 @@ async function request<T>(
     throw new ApiError(res.status, errorData.error ?? 'Request failed');
   }
 
+  if (res.status === 204) {
+    return {} as T;
+  }
+
   const data = await res.json();
   if (data && typeof data === 'object' && 'success' in data) {
     if (!data.success) {

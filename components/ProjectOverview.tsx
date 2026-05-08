@@ -1,33 +1,40 @@
 'use client';
 
-interface ProjectSummary {
-  id: string;
-  name: string;
-  totalTasks: number;
-  openTasks: number;
-  inProgressTasks: number;
-  closedTasks: number;
-}
+import { ProjectSummary } from '@/lib/types';
 
 interface ProjectOverviewProps {
   summaries: ProjectSummary[];
   onProjectSelect: (id: string) => void;
   onDeleteProject: (id: string) => void;
+  onCreateProject: () => void;
   userRole: string;
 }
 
-export default function ProjectOverview({ summaries, onProjectSelect, onDeleteProject, userRole }: ProjectOverviewProps) {
+export default function ProjectOverview({ summaries, onProjectSelect, onDeleteProject, onCreateProject, userRole }: ProjectOverviewProps) {
   const isAdmin = userRole === 'ADMIN';
   if (summaries.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-2xl flex items-center justify-center mb-4 border border-slate-200 dark:border-slate-800">
-          <svg className="w-8 h-8 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="flex flex-col items-center justify-center py-24 text-center glass-card border-dashed bg-card/10">
+        <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mb-6 border border-primary/20 shadow-inner">
+          <svg className="w-10 h-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
         </div>
-        <h3 className="text-slate-900 dark:text-white font-semibold text-lg">No projects found</h3>
-        <p className="text-slate-500 max-w-xs mt-1">Get started by creating your first project from the sidebar.</p>
+        <h3 className="text-foreground font-extrabold text-2xl tracking-tight">No projects yet</h3>
+        <p className="text-muted-foreground max-w-sm mt-2 font-medium">
+          Create your first project to start tracking tasks and collaborating with your team.
+        </p>
+        {isAdmin && (
+          <button 
+            onClick={onCreateProject}
+            className="mt-8 btn-primary px-8 bg-indigo-600 hover:bg-indigo-500"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Create Your First Project
+          </button>
+        )}
       </div>
     );
   }

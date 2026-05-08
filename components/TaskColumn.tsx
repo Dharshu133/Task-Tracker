@@ -3,32 +3,7 @@
 import { useState } from 'react';
 import TaskCard from './TaskCard';
 
-interface User {
-  id: string;
-  email: string;
-  role: string;
-}
-
-interface Status {
-  id: string;
-  name: string;
-  color: string | null;
-  category: 'todo' | 'in_progress' | 'done';
-}
-
-interface Task {
-  id: string;
-  title: string;
-  description: string | null;
-  statusId: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  dueDate: string | null;
-  createdBy: string;
-  assignee: User | null;
-  creator: User;
-  project: { id: string; name: string };
-  _count?: { comments: number };
-}
+import { Task, User, Status } from '@/lib/types';
 
 interface TaskColumnProps {
   status: Status;
@@ -57,7 +32,7 @@ export default function TaskColumn({
 
   return (
     <div 
-      className={`flex flex-col rounded-xl border border-border bg-card/40 ${isDragOver ? 'bg-brand-500/10 ring-2 ring-brand-500' : ''} p-4 min-h-[400px] transition-colors`}
+      className={`flex flex-col rounded-[2rem] border border-border bg-card/40 ${isDragOver ? 'bg-primary/5 ring-2 ring-primary/20' : ''} p-6 min-h-[500px] transition-all duration-300`}
       onDragOver={(e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
@@ -74,13 +49,13 @@ export default function TaskColumn({
       }}
     >
       {/* Column header */}
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-3 mb-6 px-1">
         <div 
-          className="w-2.5 h-2.5 rounded-full" 
+          className="w-3 h-3 rounded-full shadow-sm" 
           style={{ backgroundColor: status.color || '#6B7280' }} 
         />
-        <h3 className="font-semibold text-sm text-foreground">{status.name}</h3>
-        <span className="ml-auto text-xs font-semibold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+        <h3 className="font-extrabold text-sm text-foreground uppercase tracking-wider">{status.name}</h3>
+        <span className="ml-auto text-[10px] font-black text-muted-foreground bg-accent/50 px-2.5 py-1 rounded-full border border-border/50">
           {tasks.length}
         </span>
       </div>

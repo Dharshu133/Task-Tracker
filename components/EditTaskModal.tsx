@@ -4,29 +4,7 @@ import { useState, useEffect, FormEvent } from 'react';
 import { api, ApiError } from '@/lib/api';
 import SubtasksView from './SubtasksView';
 
-interface Project { id: string; name: string; }
-interface OrgUser { id: string; email: string; role: string; }
-interface Task {
-  id: string;
-  title: string;
-  description: string | null;
-  statusId: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  dueDate: string | null;
-  createdBy: string;
-  assignee: { id: string; email: string; role: string } | null;
-  creator: { id: string; email: string; role: string };
-  project: { id: string; name: string };
-  _count?: { comments: number; subtasks: number };
-  subtaskCount?: number;
-  completedSubtaskCount?: number;
-  completionPercentage?: number;
-}
-
-interface Status {
-  id: string;
-  name: string;
-}
+import { Task, User as OrgUser, Status } from '@/lib/types';
 
 interface EditTaskModalProps {
   task: Task;
@@ -144,100 +122,111 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="glass-card w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl shadow-black/50 animate-in fade-in zoom-in-95 duration-200">
+      <div className="glass-card w-full max-w-3xl flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-300">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-300 dark:border-slate-700 shrink-0">
-          <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-              {currentUserRole === 'ADMIN' ? 'Task Details' : 'Task Discussion'}
-            </h2>
-            <span className="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-md text-slate-500">{task.id.slice(0,8)}</span>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border/40 shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-foreground tracking-tight">
+                {currentUserRole === 'ADMIN' ? 'Manage Task' : 'Task Workspace'}
+              </h2>
+              <p className="text-muted-foreground text-xs font-medium mt-0.5">ID: {task.id.slice(0,8).toUpperCase()}</p>
+            </div>
           </div>
-          <button onClick={onClose} className="p-1.5 text-slate-500 hover:text-slate-700 dark:text-slate-300 hover:bg-slate-700 rounded-lg transition-colors">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-xl transition-all duration-300">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
 
-        <div className="flex border-b border-slate-300 dark:border-slate-700 px-6 shrink-0">
+        <div className="flex border-b border-border/40 px-6 shrink-0 bg-background/20">
           {(['DETAILS', 'SUBTASKS', 'COMMENTS'] as const)
             .filter(tab => currentUserRole === 'ADMIN' || tab === 'COMMENTS' || tab === 'SUBTASKS')
             .map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === tab ? 'border-brand-500 text-brand-500' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+              className={`px-6 py-4 text-xs font-black uppercase tracking-widest border-b-2 transition-all ${activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
             >
-              {tab.charAt(0) + tab.slice(1).toLowerCase()}
-              {tab === 'COMMENTS' && task._count?.comments ? ` (${task._count.comments})` : ''}
-              {tab === 'SUBTASKS' && task._count?.subtasks ? ` (${task._count.subtasks})` : ''}
+              {tab}
+              {tab === 'COMMENTS' && task._count?.comments ? <span className="ml-2 opacity-50">({task._count.comments})</span> : ''}
+              {tab === 'SUBTASKS' && task._count?.subtasks ? <span className="ml-2 opacity-50">({task._count.subtasks})</span> : ''}
             </button>
           ))}
         </div>
 
         {/* Body */}
-        <div className="p-5 overflow-y-auto flex-1 bg-slate-50/50 dark:bg-slate-900/20">
-          {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg mb-4">{error}</div>}
-
+        <div className="flex-1 overflow-hidden flex flex-col">
           {activeTab === 'DETAILS' && (
-            <form id="edit-form" onSubmit={handleUpdateDetails} className="space-y-3">
-              <div>
-                <label className="label">Title <span className="text-red-400">*</span></label>
-                <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="input-field" disabled={loading} />
-              </div>
-              <div>
-                <label className="label">Description</label>
-                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="input-field resize-none" disabled={loading} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+            <form id="edit-form" onSubmit={handleUpdateDetails} className="px-6 py-5 space-y-4 flex-1" noValidate>
+              {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg">{error}</div>}
+              
+              <div className="space-y-4">
                 <div>
-                  <label className="label">Priority</label>
-                  <select value={priority} onChange={e => setPriority(e.target.value as any)} className="select-field" disabled={loading}>
-                    <option value="LOW" className="bg-white dark:bg-slate-900">Low</option>
-                    <option value="MEDIUM" className="bg-white dark:bg-slate-900">Medium</option>
-                    <option value="HIGH" className="bg-white dark:bg-slate-900">High</option>
-                    <option value="CRITICAL" className="bg-white dark:bg-slate-900">Critical</option>
+                  <label className="label">Title <span className="text-red-400">*</span></label>
+                  <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="input-field" disabled={loading} />
+                </div>
+                 <div>
+                  <label className="label">Description</label>
+                  <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="input-field resize-none py-2" disabled={loading} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="label">Priority</label>
+                    <select value={priority} onChange={e => setPriority(e.target.value as any)} className="select-field" disabled={loading}>
+                      <option value="LOW" className="bg-white dark:bg-slate-900">Low</option>
+                      <option value="MEDIUM" className="bg-white dark:bg-slate-900">Medium</option>
+                      <option value="HIGH" className="bg-white dark:bg-slate-900">High</option>
+                      <option value="CRITICAL" className="bg-white dark:bg-slate-900">Critical</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Due Date</label>
+                    <input type="date" value={dueDate} min={new Date().toISOString().split('T')[0]} onChange={e => setDueDate(e.target.value)} className="input-field py-2" disabled={loading} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="label">Status</label>
+                  <select value={statusId} onChange={e => setStatusId(e.target.value)} className="select-field" disabled={loading || fetchingStatuses}>
+                    {statuses.map(s => (
+                      <option key={s.id} value={s.id} className="bg-white dark:bg-slate-900">{s.name}</option>
+                    ))}
                   </select>
                 </div>
+
                 <div>
-                  <label className="label">Due Date</label>
-                  <input type="date" value={dueDate} min={new Date().toISOString().split('T')[0]} onChange={e => setDueDate(e.target.value)} className="input-field" disabled={loading} />
+                  <label className="label">Assignee</label>
+                  <select value={assigneeId} onChange={e => setAssigneeId(e.target.value)} className="select-field" disabled={loading}>
+                    <option value="" className="bg-white dark:bg-slate-900">Unassigned</option>
+                    {filteredUsers.map(u => (
+                      <option key={u.id} value={u.id} className="bg-white dark:bg-slate-900">@{u.email.split('@')[0]}</option>
+                    ))}
+                  </select>
                 </div>
-              </div>
-
-              <div>
-                <label className="label">Status</label>
-                <select value={statusId} onChange={e => setStatusId(e.target.value)} className="select-field" disabled={loading || fetchingStatuses}>
-                  {statuses.map(s => (
-                    <option key={s.id} value={s.id} className="bg-white dark:bg-slate-900">{s.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="label">Assignee</label>
-                <select value={assigneeId} onChange={e => setAssigneeId(e.target.value)} className="select-field" disabled={loading}>
-                  <option value="" className="bg-white dark:bg-slate-900">Unassigned</option>
-                  {filteredUsers.map(u => (
-                    <option key={u.id} value={u.id} className="bg-white dark:bg-slate-900">@{u.email.split('@')[0]}</option>
-                  ))}
-                </select>
               </div>
             </form>
           )}
 
           {activeTab === 'SUBTASKS' && (
-            <SubtasksView 
-              taskId={task.id}
-              projectId={task.project.id}
-              statuses={statuses}
-            />
+            <div className="px-6 py-5 overflow-y-auto flex-1 custom-scrollbar">
+              <SubtasksView 
+                taskId={task.id}
+                projectId={task.project.id}
+                statuses={statuses}
+              />
+            </div>
           )}
 
           {activeTab === 'COMMENTS' && (
-            <div className="space-y-4 h-full flex flex-col">
-              <div className="flex-1 space-y-4 overflow-y-auto">
+            <div className="px-6 py-5 space-y-4 flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 space-y-4 overflow-y-auto custom-scrollbar">
                 {loadingData ? <p className="text-sm text-slate-500">Loading comments...</p> : 
                  comments.length === 0 ? <p className="text-sm text-slate-500">No comments yet. Start the conversation!</p> :
                  comments.filter(c => !c.parentId).map(parent => (
@@ -315,19 +304,18 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
               </form>
             </div>
           )}
-
-
         </div>
 
         {/* Footer */}
         {activeTab === 'DETAILS' && (
-          <div className="p-5 border-t border-slate-300 dark:border-slate-700 flex gap-3 shrink-0 bg-white dark:bg-slate-900">
-            <button type="button" onClick={onClose} className="btn-ghost flex-1" disabled={loading}>Cancel</button>
-            <button type="submit" form="edit-form" className="btn-primary flex-1" disabled={loading}>
-              {loading ? 'Saving...' : 'Save Changes'}
+          <div className="px-6 py-5 border-t border-border/40 flex gap-4 shrink-0">
+            <button type="button" onClick={onClose} className="btn-ghost flex-1 h-11" disabled={loading}>Cancel</button>
+            <button type="submit" form="edit-form" className="btn-primary flex-1 h-11" disabled={loading}>
+              {loading ? 'Saving Changes...' : 'Update Task'}
             </button>
           </div>
         )}
+
 
       </div>
     </div>

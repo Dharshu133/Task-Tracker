@@ -3,33 +3,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { api, ApiError } from '@/lib/api';
 
-interface Project {
-  id: string;
-  name: string;
-}
-interface OrgUser {
-  id: string;
-  email: string;
-  role: string;
-}
-interface Task {
-  id: string;
-  title: string;
-  description: string | null;
-  statusId: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  dueDate: string | null;
-  createdBy: string;
-  assignee: { id: string; email: string; role: string } | null;
-  creator: { id: string; email: string; role: string };
-  project: { id: string; name: string };
-  _count?: { comments: number };
-}
-
-interface Status {
-  id: string;
-  name: string;
-}
+import { Task, Project, User as OrgUser, Status } from '@/lib/types';
 
 interface AddTaskModalProps {
   projects: Project[];
@@ -114,40 +88,41 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="glass-card w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl shadow-black/50 animate-in fade-in zoom-in-95 duration-200">
+      <div className="glass-card w-full max-w-lg flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-300">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-300 dark:border-slate-700 shrink-0">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Add New Task</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border/40 shrink-0">
+          <div>
+            <h2 className="text-xl font-extrabold text-foreground tracking-tight">Create New Task</h2>
+            <p className="text-muted-foreground text-xs font-medium mt-0.5">Fill in the details to track a new item</p>
+          </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-500 hover:text-slate-700 dark:text-slate-300 hover:bg-slate-700 rounded-lg transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-xl transition-all duration-300"
             aria-label="Close modal"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Body */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-3 overflow-y-auto flex-1" noValidate>
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 flex-1" noValidate>
           {error && (
-            <div role="alert" className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg">
+            <div role="alert" className="bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold px-4 py-3 rounded-xl animate-shake">
               {error}
             </div>
           )}
 
           {/* Title */}
           <div>
-            <label htmlFor="task-title" className="label">
-              Title <span className="text-red-400">*</span>
-            </label>
+            <label htmlFor="task-title" className="label">Title</label>
             <input
               id="task-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter task title"
+              placeholder="What needs to be done?"
               className="input-field"
               disabled={loading}
               autoFocus
@@ -161,9 +136,9 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
               id="task-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Optional task description…"
+              placeholder="Provide more context (optional)..."
               rows={2}
-              className="input-field resize-none"
+              className="input-field resize-none py-2"
               disabled={loading}
             />
           </div>
@@ -176,13 +151,13 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
                 id="task-priority"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as any)}
-                className="select-field"
+                className="select-field py-2"
                 disabled={loading}
               >
-                <option value="LOW" className="bg-white dark:bg-slate-900">Low</option>
-                <option value="MEDIUM" className="bg-white dark:bg-slate-900">Medium</option>
-                <option value="HIGH" className="bg-white dark:bg-slate-900">High</option>
-                <option value="CRITICAL" className="bg-white dark:bg-slate-900">Critical</option>
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="CRITICAL">Critical</option>
               </select>
             </div>
             <div>
@@ -193,46 +168,43 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
                 value={dueDate}
                 min={new Date().toISOString().split('T')[0]}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="input-field"
+                className="input-field py-2"
                 disabled={loading}
               />
             </div>
           </div>
 
-          {/* Project */}
-          <div>
-            <label htmlFor="task-project" className="label">
-              Project <span className="text-red-400">*</span>
-            </label>
-            <select
-              id="task-project"
-              value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
-              className="select-field"
-            >
-              {projects.length === 0 && <option value="">No projects available</option>}
-              {projects.map((p) => (
-                <option key={p.id} value={p.id} className="bg-white dark:bg-slate-900">{p.name}</option>
-              ))}
-            </select>
-          </div>
+          {/* Project & Status */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="task-project" className="label">Project</label>
+              <select
+                id="task-project"
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
+                className="select-field py-2"
+              >
+                {projects.length === 0 && <option value="">No projects</option>}
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
 
-          {/* Status */}
-          <div>
-            <label htmlFor="task-status" className="label">
-              Initial Status {fetchingStatuses && <span className="text-[10px] animate-pulse">Loading...</span>}
-            </label>
-            <select
-              id="task-status"
-              value={statusId}
-              onChange={(e) => setStatusId(e.target.value)}
-              className="select-field"
-              disabled={loading || fetchingStatuses}
-            >
-              {statuses.map((s) => (
-                <option key={s.id} value={s.id} className="bg-white dark:bg-slate-900">{s.name}</option>
-              ))}
-            </select>
+            <div>
+              <label htmlFor="task-status" className="label">Status</label>
+              <select
+                id="task-status"
+                value={statusId}
+                onChange={(e) => setStatusId(e.target.value)}
+                className="select-field py-2"
+                disabled={loading || fetchingStatuses}
+              >
+                {statuses.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Assignee */}
@@ -242,44 +214,40 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
               id="task-assignee"
               value={assigneeId}
               onChange={(e) => setAssigneeId(e.target.value)}
-              className="select-field"
+              className="select-field py-2"
               disabled={loading}
             >
-              <option value="" className="bg-white dark:bg-slate-900">Unassigned</option>
+              <option value="">Unassigned</option>
               {filteredUsers.map((u) => (
-                <option key={u.id} value={u.id} className="bg-white dark:bg-slate-900">@{u.email.split('@')[0]} ({u.email})</option>
+                <option key={u.id} value={u.id}>@{u.email.split('@')[0]}</option>
               ))}
             </select>
           </div>
-
-          {/* Buttons */}
-          <div className="flex gap-3 pt-2 mt-2 sticky bottom-0 bg-white dark:bg-slate-900 p-2 -mx-2 rounded-lg shadow-[0_-10px_10px_-5px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_10px_-5px_rgba(0,0,0,0.2)]">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn-ghost flex-1"
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button
-              id="create-task-submit"
-              type="submit"
-              className="btn-primary flex-1"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                  </svg>
-                  Creating…
-                </>
-              ) : 'Create Task'}
-            </button>
-          </div>
         </form>
+
+        {/* Footer */}
+        <div className="px-6 py-5 border-t border-border/40 flex gap-4 shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn-ghost flex-1 h-11"
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          <button
+            id="create-task-submit"
+            type="submit"
+            onClick={(e) => {
+              const form = e.currentTarget.closest('.glass-card')?.querySelector('form') as HTMLFormElement;
+              if (form) form.requestSubmit();
+            }}
+            className="btn-primary flex-1 h-11"
+            disabled={loading}
+          >
+            {loading ? 'Creating…' : 'Create Task'}
+          </button>
+        </div>
       </div>
     </div>
   );

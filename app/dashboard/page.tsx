@@ -17,64 +17,16 @@ import StatusManagement from '@/components/StatusManagement';
 import Toast from '@/components/Toast';
 import { api } from '@/lib/api';
 
-interface Notification {
-  id: string;
-  message: string;
-  isRead: boolean;
-  createdAt: string;
-}
+import { Task, Project, Status, ProjectSummary, Notification, User } from '@/lib/types';
 
-interface UserInfo {
-  id: string;
-  email: string;
-  role: string;
+interface UserInfo extends User {
   orgId: string;
   orgName?: string;
   assignedProjectId?: string | null;
 }
 
-
-interface Project {
-  id: string;
-  name: string;
-}
-
-interface ProjectSummary {
-  id: string;
-  name: string;
-  totalTasks: number;
-  openTasks: number;
-  inProgressTasks: number;
-  closedTasks: number;
-}
-
-interface Status {
-  id: string;
-  name: string;
-  color: string | null;
-  category: 'todo' | 'in_progress' | 'done';
-  orderIndex: number;
-}
-
-interface OrgUser {
-  id: string;
-  email: string;
-  role: string;
+interface OrgUser extends User {
   assignedProjectId?: string | null;
-}
-
-interface Task {
-  id: string;
-  title: string;
-  description: string | null;
-  statusId: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  dueDate: string | null;
-  createdBy: string;
-  assignee: { id: string; email: string; role: string } | null;
-  creator: { id: string; email: string; role: string };
-  project: { id: string; name: string };
-  _count?: { comments: number };
 }
 
 export default function DashboardPage() {
@@ -323,50 +275,68 @@ export default function DashboardPage() {
         {/* Main content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           {/* Page header */}
-          <div className="flex items-start sm:items-center justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">{activeProjectName}</h1>
-              <p className="text-muted-foreground text-sm mt-0.5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 bg-card/30 p-6 rounded-3xl border border-border/50 backdrop-blur-sm">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground bg-clip-text">
+                {activeProjectName}
+              </h1>
+              <p className="text-muted-foreground text-sm mt-1.5 font-medium">
                 {activeProjectId === ('USERS_VIEW' as any)
-                  ? `Manage the ${orgUsers.length} users in your organization`
+                  ? `Manage your organization's ${orgUsers.length} team members`
                   : activeProjectId === ('ACTIVITY_LOG' as any)
-                    ? 'Global history of all actions performed in the system'
+                    ? 'Audit trail of all administrative actions'
                     : activeProjectId === ('NOTIFICATIONS' as any)
-                      ? `You have ${unreadCount} unread notifications`
+                      ? `You have ${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}`
                         : activeProjectId?.startsWith('SETTINGS:')
-                          ? 'Manage project-specific configurations and custom statuses'
+                          ? 'Configure project workflows and statuses'
                           : activeProjectId 
-                            ? `${tasks.length} task${tasks.length !== 1 ? 's' : ''} in this project`
-                            : 'Overview of all your projects'
+                            ? `${tasks.length} task${tasks.length !== 1 ? 's' : ''} currently active`
+                            : projects.length > 0 ? 'High-level summary of all active projects' : 'Welcome to your workspace'
                 }
               </p>
             </div>
-            {activeProjectId === ('USERS_VIEW' as any) ? (
-              <button
-                id="add-user-btn"
-                onClick={() => setShowAddUserModal(true)}
-                className="btn-primary shrink-0"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-                <span className="hidden sm:inline">Add User</span>
-                <span className="sm:hidden">Add</span>
-              </button>
-            ) : (activeProjectId === ('ACTIVITY_LOG' as any) || activeProjectId === ('NOTIFICATIONS' as any)) ? null : user.role === 'ADMIN' ? (
-              <button
-                id="add-task-btn"
-                onClick={() => setShowAddModal(true)}
-                className="btn-primary shrink-0"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                <span className="hidden sm:inline">Add Task</span>
-                <span className="sm:hidden">Add</span>
-              </button>
-            ) : null}
-
+            
+            <div className="flex items-center gap-3 shrink-0">
+              {activeProjectId === ('USERS_VIEW' as any) ? (
+                <button
+                  id="add-user-btn"
+                  onClick={() => setShowAddUserModal(true)}
+                  className="btn-primary"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                  </svg>
+                  <span>Add User</span>
+                </button>
+              ) : (activeProjectId === ('ACTIVITY_LOG' as any) || activeProjectId === ('NOTIFICATIONS' as any)) ? null : user.role === 'ADMIN' ? (
+                <>
+                  {/* Only show Add Task if there are projects, otherwise show Create Project */}
+                  {projects.length > 0 ? (
+                    <button
+                      id="add-task-btn"
+                      onClick={() => setShowAddModal(true)}
+                      className="btn-primary"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                      </svg>
+                      <span>Add Task</span>
+                    </button>
+                  ) : activeProjectId === null && (
+                    <button
+                      id="add-project-btn-header"
+                      onClick={() => setShowAddProjectModal(true)}
+                      className="btn-primary bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/20"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                      </svg>
+                      <span>Create Project</span>
+                    </button>
+                  )}
+                </>
+              ) : null}
+            </div>
           </div>
 
           {/* Error */}
@@ -508,6 +478,7 @@ export default function DashboardPage() {
               summaries={projectSummaries} 
               onProjectSelect={handleProjectSelect}
               onDeleteProject={handleProjectDelete}
+              onCreateProject={() => setShowAddProjectModal(true)}
               userRole={user.role}
             />
           )}

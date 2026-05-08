@@ -3,33 +3,7 @@
 import TaskColumn from './TaskColumn';
 import { api } from '@/lib/api';
 
-interface User {
-  id: string;
-  email: string;
-  role: string;
-}
-
-interface Task {
-  id: string;
-  title: string;
-  description: string | null;
-  statusId: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  dueDate: string | null;
-  createdBy: string;
-  assignee: User | null;
-  creator: User;
-  project: { id: string; name: string };
-  _count?: { comments: number };
-}
-
-interface Status {
-  id: string;
-  name: string;
-  color: string | null;
-  category: 'todo' | 'in_progress' | 'done';
-  orderIndex: number;
-}
+import { Task, User, Status } from '@/lib/types';
 
 interface KanbanBoardProps {
   tasks: Task[];

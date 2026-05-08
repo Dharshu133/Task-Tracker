@@ -3,35 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api, ApiError } from '@/lib/api';
 
-interface User {
-  id: string;
-  email: string;
-  role: string;
-}
-
-interface Task {
-  id: string;
-  title: string;
-  description: string | null;
-  statusId: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  dueDate: string | null;
-  createdBy: string;
-  assignee: User | null;
-  creator: User;
-  project: { id: string; name: string };
-  _count?: { comments: number; subtasks: number };
-  subtaskCount?: number;
-  completedSubtaskCount?: number;
-  completionPercentage?: number;
-}
-
-interface Status {
-  id: string;
-  name: string;
-  color: string | null;
-  category: 'todo' | 'in_progress' | 'done';
-}
+import { Task, User, Status } from '@/lib/types';
 
 interface TaskCardProps {
   task: Task;
@@ -46,10 +18,10 @@ interface TaskCardProps {
 
 
 const PRIORITY_COLORS: Record<string, string> = {
-  LOW: 'bg-muted text-muted-foreground',
-  MEDIUM: 'bg-primary/10 text-primary',
-  HIGH: 'bg-amber-500/10 text-amber-500',
-  CRITICAL: 'bg-destructive/10 text-destructive',
+  LOW: 'bg-slate-500/10 text-slate-500 border border-slate-500/20',
+  MEDIUM: 'bg-primary/10 text-primary border border-primary/20',
+  HIGH: 'bg-amber-500/10 text-amber-500 border border-amber-500/20',
+  CRITICAL: 'bg-destructive/10 text-destructive border border-destructive/20',
 };
 
 function isOverdue(dateString: string, category: string) {
@@ -126,23 +98,23 @@ export default function TaskCard({ task, statuses, currentUserId, currentUserRol
         e.dataTransfer.effectAllowed = 'move';
       }}
       onClick={() => onEdit(task)}
-      className={`relative glass-card p-4 group transition-all duration-200 hover:border-primary/50 hover:shadow-lg hover:shadow-black/20 cursor-pointer active:cursor-grabbing ${
-        currentStatus?.category === 'done' ? 'opacity-60' : ''
+      className={`relative glass-card !rounded-3xl p-5 group transition-all duration-300 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 cursor-pointer active:cursor-grabbing ${
+        currentStatus?.category === 'done' ? 'opacity-60 bg-muted/20' : ''
       }`}
     >
-      {/* Comment Box - Top Right (Members only) */}
-      {currentUserRole === 'MEMBER' && (
+      {/* Comment Box - Top Right */}
+      {(task._count?.comments || 0) > 0 && (
         <div 
           onClick={(e) => {
             e.stopPropagation();
             onEdit(task);
           }}
-          className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 hover:bg-primary/20 text-primary rounded border border-primary/20 transition-all cursor-pointer z-10"
+          className="absolute top-4 right-4 flex items-center gap-1 px-2 py-1 bg-background/80 backdrop-blur-md text-primary rounded-xl border border-border shadow-sm transition-all hover:scale-110 cursor-pointer z-10"
         >
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
-          <span className="text-[10px] font-bold">
+          <span className="text-[10px] font-black">
             {task._count?.comments || 0}
           </span>
         </div>
@@ -155,15 +127,15 @@ export default function TaskCard({ task, statuses, currentUserId, currentUserRol
             handleCheckbox();
           }}
           disabled={!canUpdateStatus}
-          className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
+          className={`mt-1 w-6 h-6 rounded-[0.5rem] border-2 flex items-center justify-center shrink-0 transition-all duration-300 ${
             currentStatus?.category === 'done'
-              ? 'bg-emerald-500 border-emerald-500'
-              : 'border-input ' + (canUpdateStatus ? 'hover:border-primary' : 'cursor-not-allowed opacity-50')
+              ? 'bg-emerald-500 border-emerald-500 shadow-lg shadow-emerald-500/20'
+              : 'border-border bg-background/50 ' + (canUpdateStatus ? 'hover:border-primary hover:shadow-lg hover:shadow-primary/10' : 'cursor-not-allowed opacity-50')
           }`}
           aria-label={currentStatus?.category === 'done' ? 'Mark as open' : 'Mark as closed'}
         >
           {currentStatus?.category === 'done' && (
-            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           )}
@@ -183,13 +155,14 @@ export default function TaskCard({ task, statuses, currentUserId, currentUserRol
           )}
 
           {/* Assignee & Project */}
-          <div className="flex flex-wrap items-center gap-2 mb-2">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
             {task.assignee && (
-              <span className="inline-flex items-center gap-1 text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                <span className="text-primary">@</span>{task.assignee.email.split('@')[0]}
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-tight text-primary bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20">
+                <span className="w-1 h-1 rounded-full bg-primary" />
+                {task.assignee.email.split('@')[0]}
               </span>
             )}
-            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground bg-accent/40 px-2.5 py-1 rounded-lg border border-border/50">
               📁 {task.project.name}
             </span>
             {(task.subtaskCount ?? task._count?.subtasks ?? 0) > 0 && (
@@ -231,11 +204,11 @@ export default function TaskCard({ task, statuses, currentUserId, currentUserRol
               disabled={!canUpdateStatus}
               onClick={(e) => e.stopPropagation()}
               onChange={(e) => handleStatusChange(e.target.value)}
-              className={`text-[10px] font-bold bg-card border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring transition-colors ${!canUpdateStatus ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+              className={`text-[10px] font-black uppercase tracking-widest bg-accent/30 border border-border/50 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${!canUpdateStatus ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-accent/50'}`}
               style={{ color: currentStatus?.color || 'inherit' }}
             >
               {statuses.map((opt) => (
-                <option key={opt.id} value={opt.id} className="text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900">
+                <option key={opt.id} value={opt.id} className="text-foreground bg-background">
                   {opt.name}
                 </option>
               ))}

@@ -76,13 +76,11 @@ export default function Sidebar({
           <button
             id="project-all"
             onClick={() => { onProjectSelect(null); onClose(); }}
-            className={`sidebar-item ${activeProjectId === null ? 'sidebar-item-active' : 'sidebar-item-inactive'}`}
+            className={`sidebar-item group ${activeProjectId === null ? 'sidebar-item-active' : 'sidebar-item-inactive'}`}
           >
-            <div className={`p-1.5 rounded-lg transition-colors ${activeProjectId === null ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' : 'bg-muted text-muted-foreground group-hover:text-primary'}`}>
-              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-            </div>
+            <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
             <span>Dashboard</span>
           </button>
 
@@ -92,14 +90,12 @@ export default function Sidebar({
             onClick={() => { onProjectSelect('NOTIFICATIONS' as any); onClose(); }}
             className={`sidebar-item group ${activeProjectId === ('NOTIFICATIONS' as any) ? 'sidebar-item-active' : 'sidebar-item-inactive'}`}
           >
-            <div className={`p-1.5 rounded-lg transition-colors ${activeProjectId === ('NOTIFICATIONS' as any) ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' : 'bg-muted text-muted-foreground group-hover:text-primary'}`}>
-              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-            </div>
+            <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
             <span className="flex-1">Inbox</span>
             {unreadCount > 0 && (
-              <span className="flex items-center justify-center min-w-[20px] h-5 px-1 bg-red-500 text-white text-[10px] font-black rounded-full border-2 border-background shadow-sm animate-pulse">
+              <span className={`flex items-center justify-center min-w-[20px] h-5 px-1 text-[10px] font-black rounded-full border-2 border-background shadow-sm animate-pulse ${activeProjectId === ('NOTIFICATIONS' as any) ? 'bg-white text-primary' : 'bg-red-500 text-white'}`}>
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -114,25 +110,21 @@ export default function Sidebar({
               <button
                 id="nav-users"
                 onClick={() => { onProjectSelect('USERS_VIEW' as any); onClose(); }}
-                className={`sidebar-item ${activeProjectId === ('USERS_VIEW' as any) ? 'sidebar-item-active' : 'sidebar-item-inactive'}`}
+                className={`sidebar-item group ${activeProjectId === ('USERS_VIEW' as any) ? 'sidebar-item-active' : 'sidebar-item-inactive'}`}
               >
-                <div className={`p-1.5 rounded-lg transition-colors ${activeProjectId === ('USERS_VIEW' as any) ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' : 'bg-muted text-muted-foreground group-hover:text-primary'}`}>
-                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                </div>
+                <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
                 <span>Team Members</span>
               </button>
               <button
                 id="nav-activity"
                 onClick={() => { onProjectSelect('ACTIVITY_LOG' as any); onClose(); }}
-                className={`sidebar-item ${activeProjectId === ('ACTIVITY_LOG' as any) ? 'sidebar-item-active' : 'sidebar-item-inactive'}`}
+                className={`sidebar-item group ${activeProjectId === ('ACTIVITY_LOG' as any) ? 'sidebar-item-active' : 'sidebar-item-inactive'}`}
               >
-                <div className={`p-1.5 rounded-lg transition-colors ${activeProjectId === ('ACTIVITY_LOG' as any) ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' : 'bg-muted text-muted-foreground group-hover:text-primary'}`}>
-                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
+                <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 <span>Audit Logs</span>
               </button>
             </>
@@ -169,8 +161,10 @@ export default function Sidebar({
                   onClick={() => { onProjectSelect(project.id); onClose(); }}
                   className={`flex-1 sidebar-item ${activeProjectId === project.id ? 'sidebar-item-active' : 'sidebar-item-inactive'}`}
                 >
-                  <div className={`w-2.5 h-2.5 rounded-full shrink-0 transition-all ${activeProjectId === project.id ? 'bg-primary scale-125' : 'bg-muted'}`} />
-                  <span className="truncate font-bold tracking-tight">{project.name}</span>
+                  <svg className="w-5 h-5 shrink-0 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                  </svg>
+                  <span className="truncate tracking-tight">{project.name}</span>
                 </button>
                 
                 {isAdmin && (

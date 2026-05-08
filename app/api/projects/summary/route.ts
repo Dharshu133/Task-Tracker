@@ -19,7 +19,11 @@ export async function GET(request: NextRequest) {
           select: { tasks: true },
         },
         tasks: {
-          select: { status: true },
+          select: { 
+            status: {
+              select: { category: true }
+            }
+          },
         },
       },
       orderBy: { name: 'asc' },
@@ -28,19 +32,20 @@ export async function GET(request: NextRequest) {
     const summary = projects.map((p) => {
       const counts = p.tasks.reduce(
         (acc, task) => {
-          acc[task.status]++;
+          const category = task.status?.category || 'todo';
+          acc[category]++;
           return acc;
         },
-        { OPEN: 0, IN_PROGRESS: 0, CLOSED: 0 }
+        { todo: 0, in_progress: 0, done: 0 }
       );
 
       return {
         id: p.id,
         name: p.name,
         totalTasks: p._count.tasks,
-        openTasks: counts.OPEN,
-        inProgressTasks: counts.IN_PROGRESS,
-        closedTasks: counts.CLOSED,
+        openTasks: counts.todo,
+        inProgressTasks: counts.in_progress,
+        closedTasks: counts.done,
       };
     });
 

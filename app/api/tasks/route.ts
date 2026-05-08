@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTasks, createTask } from '@/lib/services/taskService';
 import { createTaskSchema } from '@/lib/validators/taskValidator';
-import { Status, Priority } from '@prisma/client';
+import { Priority } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     const filters = {
       keyword: searchParams.get('keyword') || undefined,
-      status: (searchParams.get('status') as Status) || undefined,
+      statusId: searchParams.get('status_id') || undefined,
       assignee_id: searchParams.get('assignee_id') || undefined,
       project_id,
       priority: (searchParams.get('priority') as Priority) || undefined,

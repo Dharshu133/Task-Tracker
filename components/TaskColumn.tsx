@@ -9,11 +9,18 @@ interface User {
   role: string;
 }
 
+interface Status {
+  id: string;
+  name: string;
+  color: string | null;
+  category: 'todo' | 'in_progress' | 'done';
+}
+
 interface Task {
   id: string;
   title: string;
   description: string | null;
-  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  statusId: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   dueDate: string | null;
   createdBy: string;
@@ -23,47 +30,22 @@ interface Task {
   _count?: { comments: number };
 }
 
-const COLUMN_META = {
-  OPEN: {
-    label: 'Open',
-    icon: '○',
-    color: 'text-sky-400',
-    border: 'border-sky-500/30',
-    bg: 'bg-sky-500/5',
-    dot: 'bg-sky-400',
-  },
-  IN_PROGRESS: {
-    label: 'In Progress',
-    icon: '◑',
-    color: 'text-amber-400',
-    border: 'border-amber-500/30',
-    bg: 'bg-amber-500/5',
-    dot: 'bg-amber-400',
-  },
-  CLOSED: {
-    label: 'Closed',
-    icon: '●',
-    color: 'text-emerald-400',
-    border: 'border-emerald-500/30',
-    bg: 'bg-emerald-500/5',
-    dot: 'bg-emerald-400',
-  },
-};
-
 interface TaskColumnProps {
-  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  status: Status;
   tasks: Task[];
+  statuses: Status[];
   currentUserId: string;
   currentUserRole: string;
   onUpdate: (updated: Task, toastMsg?: string) => void;
   onDelete: (id: string) => void;
   onEdit: (task: Task) => void;
-  onDropTask?: (taskId: string, newStatus: Task['status']) => void;
+  onDropTask?: (taskId: string, newStatusId: string) => void;
 }
 
 export default function TaskColumn({
   status,
   tasks,
+  statuses,
   currentUserId,
   currentUserRole,
   onUpdate,
@@ -72,13 +54,13 @@ export default function TaskColumn({
   onDropTask,
 }: TaskColumnProps) {
   const [isDragOver, setIsDragOver] = useState(false);
-  const meta = COLUMN_META[status];
 
   return (
     <div 
-      className={`flex flex-col rounded-xl border ${meta.border} ${isDragOver ? 'bg-brand-500/10 ring-2 ring-brand-500' : meta.bg} p-4 min-h-[300px] transition-colors`}
+      className={`flex flex-col rounded-xl border border-border bg-card/40 ${isDragOver ? 'bg-brand-500/10 ring-2 ring-brand-500' : ''} p-4 min-h-[400px] transition-colors`}
       onDragOver={(e) => {
         e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
         setIsDragOver(true);
       }}
       onDragLeave={() => setIsDragOver(false)}
@@ -87,14 +69,17 @@ export default function TaskColumn({
         setIsDragOver(false);
         const taskId = e.dataTransfer.getData('taskId');
         if (taskId && onDropTask) {
-          onDropTask(taskId, status);
+          onDropTask(taskId, status.id);
         }
       }}
     >
       {/* Column header */}
       <div className="flex items-center gap-2 mb-4">
-        <div className={`w-2.5 h-2.5 rounded-full ${meta.dot}`} />
-        <h3 className={`font-semibold text-sm ${meta.color}`}>{meta.label}</h3>
+        <div 
+          className="w-2.5 h-2.5 rounded-full" 
+          style={{ backgroundColor: status.color || '#6B7280' }} 
+        />
+        <h3 className="font-semibold text-sm text-foreground">{status.name}</h3>
         <span className="ml-auto text-xs font-semibold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
           {tasks.length}
         </span>
@@ -114,6 +99,7 @@ export default function TaskColumn({
             <TaskCard
               key={task.id}
               task={task}
+              statuses={statuses}
               currentUserId={currentUserId}
               currentUserRole={currentUserRole}
               onUpdate={onUpdate}

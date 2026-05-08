@@ -48,11 +48,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
 
+    const adminId = request.headers.get('x-user-id');
+
     const project = await prisma.project.create({
-      data: { name: name.trim(), orgId: org_id },
+      data: { 
+        name: name.trim(), 
+        orgId: org_id,
+        statuses: {
+          create: [
+            { name: 'To Do', color: '#6B7280', category: 'todo', orderIndex: 0, isDefault: true, createdBy: adminId! },
+            { name: 'In Progress', color: '#3B82F6', category: 'in_progress', orderIndex: 1, isDefault: true, createdBy: adminId! },
+            { name: 'Done', color: '#10B981', category: 'done', orderIndex: 2, isDefault: true, createdBy: adminId! },
+          ]
+        }
+      },
     });
 
-    const adminId = request.headers.get('x-user-id');
     if (adminId) {
       await createActivityLog({
         userId: adminId,

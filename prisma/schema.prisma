@@ -28,6 +28,7 @@ model User {
   comments          Comment[]
   activityLogs      ActivityLog[]
   notifications     Notification[]
+  createdStatuses   ProjectTaskStatus[] @relation("StatusCreator")
 }
 
 
@@ -38,6 +39,7 @@ model Project {
   org           Organization @relation(fields: [orgId], references: [id])
   tasks         Task[]
   assignedUsers User[]       @relation("ProjectAssignment")
+  statuses      ProjectTaskStatus[]
 }
 
 
@@ -45,7 +47,8 @@ model Task {
   id          String  @id @default(uuid())
   title       String
   description String?
-  status      Status  @default(OPEN)
+  statusId    String
+  status      ProjectTaskStatus @relation(fields: [statusId], references: [id])
   isCompleted Boolean @default(false)
   dueDate     DateTime?
   priority    Priority @default(LOW)
@@ -67,10 +70,28 @@ enum Role {
   MEMBER
 }
 
-enum Status {
-  OPEN
-  IN_PROGRESS
-  CLOSED
+enum StatusCategory {
+  todo
+  in_progress
+  done
+}
+
+model ProjectTaskStatus {
+  id          String         @id @default(uuid())
+  projectId   String
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name        String
+  color       String?
+  category    StatusCategory
+  orderIndex  Int
+  isDefault   Boolean        @default(false)
+  createdBy   String
+  creator     User           @relation("StatusCreator", fields: [createdBy], references: [id])
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  tasks       Task[]
+
+  @@unique([projectId, name])
 }
 
 enum Priority {

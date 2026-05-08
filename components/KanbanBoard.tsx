@@ -13,7 +13,7 @@ interface Task {
   id: string;
   title: string;
   description: string | null;
-  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  statusId: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   dueDate: string | null;
   createdBy: string;
@@ -23,8 +23,17 @@ interface Task {
   _count?: { comments: number };
 }
 
+interface Status {
+  id: string;
+  name: string;
+  color: string | null;
+  category: 'todo' | 'in_progress' | 'done';
+  orderIndex: number;
+}
+
 interface KanbanBoardProps {
   tasks: Task[];
+  statuses: Status[];
   currentUserId: string;
   currentUserRole: string;
   onUpdate: (updated: Task, toastMsg?: string) => void;
@@ -32,51 +41,52 @@ interface KanbanBoardProps {
   onEdit: (task: Task) => void;
 }
 
-const STATUSES: Task['status'][] = ['OPEN', 'IN_PROGRESS', 'CLOSED'];
-
 export default function KanbanBoard({
   tasks,
+  statuses,
   currentUserId,
   currentUserRole,
   onUpdate,
   onDelete,
   onEdit,
 }: KanbanBoardProps) {
-  const tasksByStatus = (status: Task['status']) =>
-    tasks.filter((t) => t.status === status);
+  const tasksByStatus = (statusId: string) =>
+    tasks.filter((t) => t.statusId === statusId);
 
-  const handleDropTask = async (taskId: string, newStatus: Task['status']) => {
+  const handleDropTask = async (taskId: string, newStatusId: string) => {
     const taskIndex = tasks.findIndex(t => t.id === taskId);
     if (taskIndex === -1) return;
     const task = tasks[taskIndex];
-    if (task.status === newStatus) return;
+    if (task.statusId === newStatusId) return;
 
-    const prevStatus = task.status;
-    const updatedTask = { ...task, status: newStatus };
+    const prevStatusId = task.statusId;
+    const updatedTask = { ...task, statusId: newStatusId };
     onUpdate(updatedTask, 'Status updated successfully');
 
     try {
-      const serverUpdatedTask = await api.patch<Task>(`/api/tasks/${taskId}`, { status: newStatus });
+      const serverUpdatedTask = await api.patch<Task>(`/api/tasks/${taskId}`, { statusId: newStatusId });
       onUpdate(serverUpdatedTask, 'Status updated successfully');
     } catch {
-      onUpdate({ ...task, status: prevStatus });
+      onUpdate({ ...task, statusId: prevStatusId });
     }
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {STATUSES.map((status) => (
-        <TaskColumn
-          key={status}
-          status={status}
-          tasks={tasksByStatus(status)}
-          currentUserId={currentUserId}
-          currentUserRole={currentUserRole}
-          onUpdate={onUpdate}
-          onDelete={onDelete}
-          onEdit={onEdit}
-          onDropTask={handleDropTask}
-        />
+    <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
+      {statuses.map((status) => (
+        <div key={status.id} className="min-w-[300px] w-full max-w-[400px]">
+          <TaskColumn
+            status={status}
+            tasks={tasksByStatus(status.id)}
+            statuses={statuses}
+            currentUserId={currentUserId}
+            currentUserRole={currentUserRole}
+            onUpdate={onUpdate}
+            onDelete={onDelete}
+            onEdit={onEdit}
+            onDropTask={handleDropTask}
+          />
+        </div>
       ))}
     </div>
   );

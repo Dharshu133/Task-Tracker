@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api, ApiError } from '@/lib/api';
 
 interface User {
@@ -13,7 +13,7 @@ interface Task {
   id: string;
   title: string;
   description: string | null;
-  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  statusId: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   dueDate: string | null;
   createdBy: string;
@@ -23,8 +23,16 @@ interface Task {
   _count?: { comments: number };
 }
 
+interface Status {
+  id: string;
+  name: string;
+  color: string | null;
+  category: 'todo' | 'in_progress' | 'done';
+}
+
 interface TaskCardProps {
   task: Task;
+  statuses: Status[];
   currentUserId: string;
   currentUserRole: string;
   onUpdate: (updated: Task, toastMsg?: string) => void;
@@ -32,11 +40,7 @@ interface TaskCardProps {
   onEdit: (task: Task) => void;
 }
 
-const STATUS_OPTIONS: { value: Task['status']; label: string; color: string }[] = [
-  { value: 'OPEN', label: 'Open', color: 'text-sky-400' },
-  { value: 'IN_PROGRESS', label: 'In Progress', color: 'text-amber-400' },
-  { value: 'CLOSED', label: 'Closed', color: 'text-emerald-400' },
-];
+
 
 const PRIORITY_COLORS: Record<string, string> = {
   LOW: 'bg-muted text-muted-foreground',
@@ -45,45 +49,56 @@ const PRIORITY_COLORS: Record<string, string> = {
   CRITICAL: 'bg-destructive/10 text-destructive',
 };
 
-function isOverdue(dateString: string, status: Task['status']) {
-  if (status === 'CLOSED') return false;
+function isOverdue(dateString: string, category: string) {
+  if (category === 'done') return false;
   const dueDate = new Date(dateString);
   dueDate.setHours(23, 59, 59, 999);
   return dueDate.getTime() < Date.now();
 }
 
-export default function TaskCard({ task, currentUserId, currentUserRole, onUpdate, onDelete, onEdit }: TaskCardProps) {
-  const [localStatus, setLocalStatus] = useState(task.status);
+export default function TaskCard({ task, statuses, currentUserId, currentUserRole, onUpdate, onDelete, onEdit }: TaskCardProps) {
+  const [localStatusId, setLocalStatusId] = useState(task.statusId);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  useEffect(() => {
+    setLocalStatusId(task.statusId);
+  }, [task.statusId]);
+
   const canFullEdit = currentUserRole === 'ADMIN';
-  const canUpdateStatus = true; // All members/admins in org can update status
+  const canUpdateStatus = true; 
 
-
-  const currentStatusMeta = STATUS_OPTIONS.find((s) => s.value === localStatus)!;
+  const currentStatus = statuses.find((s) => s.id === localStatusId);
 
   // Optimistic status update
-  async function handleStatusChange(newStatus: Task['status']) {
+  async function handleStatusChange(newStatusId: string) {
     if (!canUpdateStatus) return;
-    const prevStatus = localStatus;
-    setLocalStatus(newStatus); // instant UI update (<100ms)
-    onUpdate({ ...task, status: newStatus }, 'Status updated successfully');
+    const prevStatusId = localStatusId;
+    setLocalStatusId(newStatusId);
+    onUpdate({ ...task, statusId: newStatusId }, 'Status updated successfully');
 
     try {
-      const updated = await api.patch<Task>(`/api/tasks/${task.id}`, { status: newStatus });
+      const updated = await api.patch<Task>(`/api/tasks/${task.id}`, { statusId: newStatusId });
       onUpdate(updated, 'Status updated successfully');
     } catch {
-      // Rollback on failure
-      setLocalStatus(prevStatus);
-      onUpdate({ ...task, status: prevStatus });
+      setLocalStatusId(prevStatusId);
+      onUpdate({ ...task, statusId: prevStatusId });
     }
   }
 
-  // Checkbox: toggle between OPEN / CLOSED
+  // Checkbox: toggle between current and 'done' status
   async function handleCheckbox() {
     if (!canUpdateStatus) return;
-    const newStatus = localStatus === 'CLOSED' ? 'OPEN' : 'CLOSED';
-    await handleStatusChange(newStatus);
+    const isDone = currentStatus?.category === 'done';
+    
+    if (isDone) {
+      // Find 'todo' or first status
+      const todoStatus = statuses.find(s => s.category === 'todo') || statuses[0];
+      if (todoStatus) await handleStatusChange(todoStatus.id);
+    } else {
+      // Find 'done' status
+      const doneStatus = statuses.find(s => s.category === 'done');
+      if (doneStatus) await handleStatusChange(doneStatus.id);
+    }
   }
 
   async function handleDelete() {
@@ -105,10 +120,11 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
       draggable={true}
       onDragStart={(e) => {
         e.dataTransfer.setData('taskId', task.id);
+        e.dataTransfer.effectAllowed = 'move';
       }}
       onClick={() => onEdit(task)}
       className={`relative glass-card p-4 group transition-all duration-200 hover:border-primary/50 hover:shadow-lg hover:shadow-black/20 cursor-pointer active:cursor-grabbing ${
-        localStatus === 'CLOSED' ? 'opacity-60' : ''
+        currentStatus?.category === 'done' ? 'opacity-60' : ''
       }`}
     >
       {/* Comment Box - Top Right (Members only) */}
@@ -137,13 +153,13 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
           }}
           disabled={!canUpdateStatus}
           className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
-            localStatus === 'CLOSED'
+            currentStatus?.category === 'done'
               ? 'bg-emerald-500 border-emerald-500'
               : 'border-input ' + (canUpdateStatus ? 'hover:border-primary' : 'cursor-not-allowed opacity-50')
           }`}
-          aria-label={localStatus === 'CLOSED' ? 'Mark as open' : 'Mark as closed'}
+          aria-label={currentStatus?.category === 'done' ? 'Mark as open' : 'Mark as closed'}
         >
-          {localStatus === 'CLOSED' && (
+          {currentStatus?.category === 'done' && (
             <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
@@ -152,7 +168,7 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
 
         <div className="flex-1 min-w-0">
           {/* Title */}
-          <p className={`font-semibold text-sm leading-snug mb-1 ${localStatus === 'CLOSED' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+          <p className={`font-semibold text-sm leading-snug mb-1 ${currentStatus?.category === 'done' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
             {task.title}
           </p>
 
@@ -182,7 +198,7 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
               {task.priority}
             </span>
             {task.dueDate && (
-              <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${isOverdue(task.dueDate, localStatus) ? 'bg-destructive/10 text-destructive border border-destructive/20' : 'bg-muted text-muted-foreground'}`}>
+              <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${isOverdue(task.dueDate, currentStatus?.category || '') ? 'bg-destructive/10 text-destructive border border-destructive/20' : 'bg-muted text-muted-foreground'}`}>
                 ⏳ {new Date(task.dueDate).toLocaleDateString()}
               </span>
             )}
@@ -190,15 +206,16 @@ export default function TaskCard({ task, currentUserId, currentUserRole, onUpdat
 
           <div className="flex items-center justify-between mt-auto">
             <select
-              value={localStatus}
+              value={task.statusId}
               disabled={!canUpdateStatus}
               onClick={(e) => e.stopPropagation()}
-              onChange={(e) => handleStatusChange(e.target.value as Task['status'])}
-              className={`text-[10px] font-bold bg-card border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring transition-colors ${currentStatusMeta.color} ${!canUpdateStatus ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              className={`text-[10px] font-bold bg-card border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring transition-colors ${!canUpdateStatus ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+              style={{ color: currentStatus?.color || 'inherit' }}
             >
-              {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value} className="text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900">
-                  {opt.label}
+              {statuses.map((opt) => (
+                <option key={opt.id} value={opt.id} className="text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900">
+                  {opt.name}
                 </option>
               ))}
             </select>

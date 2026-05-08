@@ -16,7 +16,7 @@ interface Task {
   id: string;
   title: string;
   description: string | null;
-  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  statusId: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   dueDate: string | null;
   createdBy: string;
@@ -24,6 +24,11 @@ interface Task {
   creator: { id: string; email: string; role: string };
   project: { id: string; name: string };
   _count?: { comments: number };
+}
+
+interface Status {
+  id: string;
+  name: string;
 }
 
 interface AddTaskModalProps {
@@ -41,8 +46,11 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
   const [assigneeId, setAssigneeId] = useState('');
   const [priority, setPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'>('LOW');
   const [dueDate, setDueDate] = useState('');
+  const [statusId, setStatusId] = useState('');
+  const [statuses, setStatuses] = useState<Status[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fetchingStatuses, setFetchingStatuses] = useState(false);
 
   // Filter assignees: Members can only assign to other Members
   const filteredUsers = currentUserRole === 'MEMBER' 
@@ -55,6 +63,19 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  // Fetch statuses for selected project
+  useEffect(() => {
+    if (!projectId) return;
+    setFetchingStatuses(true);
+    api.get<Status[]>(`/api/projects/${projectId}/statuses`)
+      .then(data => {
+        setStatuses(data);
+        if (data.length > 0) setStatusId(data[0].id);
+      })
+      .catch(err => console.error('Failed to fetch statuses', err))
+      .finally(() => setFetchingStatuses(false));
+  }, [projectId]);
 
   function validate(): string {
     if (!title.trim()) return 'Title is required';
@@ -74,6 +95,7 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
         title: title.trim(),
         description: description.trim() || undefined,
         project_id: projectId,
+        statusId: statusId || undefined,
         assignee_id: assigneeId || undefined,
         priority,
         due_date: dueDate ? new Date(dueDate).toISOString() : undefined,
@@ -187,11 +209,28 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
               value={projectId}
               onChange={(e) => setProjectId(e.target.value)}
               className="select-field"
-              disabled={loading}
             >
               {projects.length === 0 && <option value="">No projects available</option>}
               {projects.map((p) => (
                 <option key={p.id} value={p.id} className="bg-white dark:bg-slate-900">{p.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status */}
+          <div>
+            <label htmlFor="task-status" className="label">
+              Initial Status {fetchingStatuses && <span className="text-[10px] animate-pulse">Loading...</span>}
+            </label>
+            <select
+              id="task-status"
+              value={statusId}
+              onChange={(e) => setStatusId(e.target.value)}
+              className="select-field"
+              disabled={loading || fetchingStatuses}
+            >
+              {statuses.map((s) => (
+                <option key={s.id} value={s.id} className="bg-white dark:bg-slate-900">{s.name}</option>
               ))}
             </select>
           </div>

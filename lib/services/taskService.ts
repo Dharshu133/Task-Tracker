@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { ActionType, Status, Priority } from '@prisma/client';
+import { ActionType, Priority } from '@prisma/client';
 
 const TASK_INCLUDE = {
   creator: { select: { id: true, email: true, role: true } },
@@ -9,7 +9,7 @@ const TASK_INCLUDE = {
 
 export const getTasks = async (filters: {
   keyword?: string;
-  status?: Status;
+  statusId?: string;
   assignee_id?: string;
   project_id?: string;
   priority?: Priority;
@@ -29,7 +29,7 @@ export const getTasks = async (filters: {
       { description: { contains: filters.keyword, mode: 'insensitive' } }
     ];
   }
-  if (filters.status) where.status = filters.status;
+  if (filters.statusId) where.statusId = filters.statusId;
   if (filters.assignee_id) where.assigneeId = filters.assignee_id;
   if (filters.project_id) {
     where.projectId = filters.project_id;
@@ -95,7 +95,10 @@ export const createTask = async (data: any, userId: string) => {
       data: {
         title: data.title,
         description: data.description,
-        status: data.status || Status.OPEN,
+        statusId: data.statusId || (await tx.projectTaskStatus.findFirst({
+          where: { projectId: data.project_id, orderIndex: 0 },
+          select: { id: true }
+        }))?.id,
         priority: data.priority || Priority.LOW,
         dueDate: data.due_date ? new Date(data.due_date) : null,
         assigneeId: data.assignee_id,
@@ -136,16 +139,23 @@ export const updateTask = async (id: string, data: any, userId: string) => {
     const updatedData: any = {};
     if (data.title !== undefined) updatedData.title = data.title;
     if (data.description !== undefined) updatedData.description = data.description;
-    if (data.status !== undefined) updatedData.status = data.status;
+    if (data.statusId !== undefined) updatedData.statusId = data.statusId;
     if (data.priority !== undefined) updatedData.priority = data.priority;
     if (data.due_date !== undefined) updatedData.dueDate = data.due_date ? new Date(data.due_date) : null;
     if (data.assignee_id !== undefined) updatedData.assigneeId = data.assignee_id;
     if (data.project_id !== undefined) updatedData.projectId = data.project_id;
 
-    if (data.status === Status.CLOSED && oldTask.status !== Status.CLOSED) {
-      updatedData.isCompleted = true;
-    } else if (data.status && data.status !== Status.CLOSED) {
-      updatedData.isCompleted = false;
+    // Check if new status category is 'done'
+    if (data.statusId && data.statusId !== oldTask.statusId) {
+      const newStatus = await tx.projectTaskStatus.findUnique({
+        where: { id: data.statusId },
+        select: { category: true }
+      });
+      if (newStatus?.category === 'done') {
+        updatedData.isCompleted = true;
+      } else {
+        updatedData.isCompleted = false;
+      }
     }
 
     const task = await tx.task.update({
@@ -156,7 +166,7 @@ export const updateTask = async (id: string, data: any, userId: string) => {
 
     // Determine Action Type
     let actionType: ActionType = ActionType.UPDATED;
-    if (data.status && data.status !== oldTask.status) actionType = ActionType.STATUS_CHANGED;
+    if (data.statusId && data.statusId !== oldTask.statusId) actionType = ActionType.STATUS_CHANGED;
     if (data.assignee_id && data.assignee_id !== oldTask.assigneeId) actionType = ActionType.ASSIGNED;
 
     await tx.activityLog.create({
@@ -179,12 +189,12 @@ export const updateTask = async (id: string, data: any, userId: string) => {
       });
     }
 
-    if (data.status && data.status !== oldTask.status && task.assigneeId && task.assigneeId !== userId) {
+    if (data.statusId && data.statusId !== oldTask.statusId && task.assigneeId && task.assigneeId !== userId) {
       await tx.notification.create({
         data: {
           userId: task.assigneeId,
           taskId: task.id,
-          message: `Task status changed to ${task.status}: ${task.title}`
+          message: `Task status changed: ${task.title}`
         }
       });
     }

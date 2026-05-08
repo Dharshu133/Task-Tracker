@@ -9,7 +9,7 @@ interface Task {
   id: string;
   title: string;
   description: string | null;
-  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  statusId: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   dueDate: string | null;
   createdBy: string;
@@ -17,6 +17,11 @@ interface Task {
   creator: { id: string; email: string; role: string };
   project: { id: string; name: string };
   _count?: { comments: number };
+}
+
+interface Status {
+  id: string;
+  name: string;
 }
 
 interface EditTaskModalProps {
@@ -37,8 +42,11 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
   const [assigneeId, setAssigneeId] = useState(task.assignee?.id || '');
   const [priority, setPriority] = useState(task.priority || 'LOW');
   const [dueDate, setDueDate] = useState(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '');
+  const [statusId, setStatusId] = useState(task.statusId);
+  const [statuses, setStatuses] = useState<Status[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fetchingStatuses, setFetchingStatuses] = useState(false);
 
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -74,6 +82,7 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
       const updated = await api.patch<Task>(`/api/tasks/${task.id}`, {
         title: title.trim(),
         description: description.trim() || null,
+        statusId,
         assignee_id: assigneeId || null,
         priority,
         due_date: dueDate ? new Date(dueDate).toISOString() : null,
@@ -183,6 +192,15 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
                   <label className="label">Due Date</label>
                   <input type="date" value={dueDate} min={new Date().toISOString().split('T')[0]} onChange={e => setDueDate(e.target.value)} className="input-field" disabled={loading} />
                 </div>
+              </div>
+
+              <div>
+                <label className="label">Status</label>
+                <select value={statusId} onChange={e => setStatusId(e.target.value)} className="select-field" disabled={loading || fetchingStatuses}>
+                  {statuses.map(s => (
+                    <option key={s.id} value={s.id} className="bg-white dark:bg-slate-900">{s.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div>

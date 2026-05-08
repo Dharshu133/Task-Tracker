@@ -13,6 +13,7 @@ import AddUserModal from '@/components/AddUserModal';
 import EditUserModal from '@/components/EditUserModal';
 import ActivityLogView from '@/components/ActivityLogView';
 import NotificationsView from '@/components/NotificationsView';
+import StatusManagement from '@/components/StatusManagement';
 import Toast from '@/components/Toast';
 import { api } from '@/lib/api';
 
@@ -47,6 +48,14 @@ interface ProjectSummary {
   closedTasks: number;
 }
 
+interface Status {
+  id: string;
+  name: string;
+  color: string | null;
+  category: 'todo' | 'in_progress' | 'done';
+  orderIndex: number;
+}
+
 interface OrgUser {
   id: string;
   email: string;
@@ -58,7 +67,7 @@ interface Task {
   id: string;
   title: string;
   description: string | null;
-  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  statusId: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   dueDate: string | null;
   createdBy: string;
@@ -76,6 +85,7 @@ export default function DashboardPage() {
   const [projectSummaries, setProjectSummaries] = useState<ProjectSummary[]>([]);
   const [orgUsers, setOrgUsers] = useState<OrgUser[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [statuses, setStatuses] = useState<Status[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -185,10 +195,16 @@ export default function DashboardPage() {
       if (isOverdue) params.append('is_overdue', 'true');
 
       const qs = params.toString() ? `?${params.toString()}` : '';
-      const data = await api.get<Task[]>(`/api/tasks${qs}`);
-      setTasks(data);
+      const [tasksData, statusesData] = await Promise.all([
+        api.get<Task[]>(`/api/tasks${qs}`),
+        activeProjectId && activeProjectId !== 'USERS_VIEW' && activeProjectId !== 'ACTIVITY_LOG' && activeProjectId !== 'NOTIFICATIONS' && !activeProjectId.startsWith('SETTINGS:')
+          ? api.get<Status[]>(`/api/projects/${activeProjectId}/statuses`)
+          : Promise.resolve([])
+      ]);
+      setTasks(tasksData);
+      setStatuses(statusesData);
     } catch {
-      setError('Failed to load tasks.');
+      setError('Failed to load data.');
     } finally {
       setLoading(false);
     }
@@ -198,15 +214,16 @@ export default function DashboardPage() {
     fetchTasks();
   }, [fetchTasks]);
 
-  function handleTaskUpdate(updated: Task, toastMsg?: string) {
-    setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+  const handleTaskUpdate = useCallback((updated: Task, toastMsg?: string) => {
+    setTasks((prev) => {
+      const newTasks = prev.map((t) => (t.id === updated.id ? updated : t));
+      return [...newTasks]; // Ensure new array reference
+    });
     if (toastMsg) {
       setToast({ message: toastMsg, type: 'success' });
-    } else {
-      setToast({ message: 'Task updated successfully', type: 'success' });
     }
     if (activeProjectId === null) fetchSummaries();
-  }
+  }, [activeProjectId, fetchSummaries]);
 
   function handleTaskDelete(id: string) {
     setTasks((prev) => prev.filter((t) => t.id !== id));
@@ -278,9 +295,11 @@ export default function DashboardPage() {
         ? 'Activity Log'
         : activeProjectId === ('NOTIFICATIONS' as any)
           ? 'Notifications'
-          : activeProjectId 
-            ? projects.find((p) => p.id === activeProjectId)?.name ?? 'Project' 
-            : 'Dashboard';
+            : activeProjectId?.startsWith('SETTINGS:')
+              ? `${projects.find((p) => p.id === activeProjectId.split(':')[1])?.name ?? 'Project'} Settings`
+              : activeProjectId 
+                ? projects.find((p) => p.id === activeProjectId)?.name ?? 'Project' 
+                : 'Dashboard';
 
   if (!user) return null;
 
@@ -314,9 +333,11 @@ export default function DashboardPage() {
                     ? 'Global history of all actions performed in the system'
                     : activeProjectId === ('NOTIFICATIONS' as any)
                       ? `You have ${unreadCount} unread notifications`
-                      : activeProjectId 
-                        ? `${tasks.length} task${tasks.length !== 1 ? 's' : ''} in this project`
-                        : 'Overview of all your projects'
+                        : activeProjectId?.startsWith('SETTINGS:')
+                          ? 'Manage project-specific configurations and custom statuses'
+                          : activeProjectId 
+                            ? `${tasks.length} task${tasks.length !== 1 ? 's' : ''} in this project`
+                            : 'Overview of all your projects'
                 }
               </p>
             </div>
@@ -441,6 +462,11 @@ export default function DashboardPage() {
                 setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
               }}
             />
+          ) : activeProjectId?.startsWith('SETTINGS:') ? (
+            <StatusManagement 
+              projectId={activeProjectId.split(':')[1]} 
+              userRole={user.role} 
+            />
           ) : activeProjectId ? (
             <>
               <div className="bg-card border border-border rounded-xl p-4 mb-6 flex flex-wrap gap-4 items-end">
@@ -467,9 +493,9 @@ export default function DashboardPage() {
                   <label htmlFor="overdue-filter" className="text-sm font-semibold text-destructive cursor-pointer">Overdue Only</label>
                 </div>
               </div>
-
               <KanbanBoard
                 tasks={tasks}
+                statuses={statuses}
                 currentUserId={user.id}
                 currentUserRole={user.role}
                 onUpdate={handleTaskUpdate}

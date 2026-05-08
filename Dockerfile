@@ -51,7 +51,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/bcryptjs ./node_modu
 
 # Copy entrypoint script
 COPY --chown=nextjs:nodejs entrypoint.sh ./
-RUN chmod +x entrypoint.sh
+RUN sed -i 's/\r$//' entrypoint.sh && chmod +x entrypoint.sh
 
 USER nextjs
 

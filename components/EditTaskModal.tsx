@@ -2,6 +2,7 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import { api, ApiError } from '@/lib/api';
+import SubtasksView from './SubtasksView';
 
 interface Project { id: string; name: string; }
 interface OrgUser { id: string; email: string; role: string; }
@@ -16,7 +17,10 @@ interface Task {
   assignee: { id: string; email: string; role: string } | null;
   creator: { id: string; email: string; role: string };
   project: { id: string; name: string };
-  _count?: { comments: number };
+  _count?: { comments: number; subtasks: number };
+  subtaskCount?: number;
+  completedSubtaskCount?: number;
+  completionPercentage?: number;
 }
 
 interface Status {
@@ -33,7 +37,7 @@ interface EditTaskModalProps {
 }
 
 export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose, onUpdated }: EditTaskModalProps) {
-  const [activeTab, setActiveTab] = useState<'DETAILS' | 'COMMENTS'>(
+  const [activeTab, setActiveTab] = useState<'DETAILS' | 'COMMENTS' | 'SUBTASKS'>(
     currentUserRole === 'MEMBER' ? 'COMMENTS' : 'DETAILS'
   );
 
@@ -72,6 +76,13 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
     }
   }, [activeTab, task.id]);
 
+  useEffect(() => {
+    setFetchingStatuses(true);
+    api.get<Status[]>(`/api/projects/${task.project.id}/statuses`)
+      .then(setStatuses)
+      .finally(() => setFetchingStatuses(false));
+  }, [task.project.id]);
+
   async function handleUpdateDetails(e: FormEvent) {
     e.preventDefault();
     if (!title.trim()) { setError('Title is required'); return; }
@@ -108,7 +119,7 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
       setComments(prev => [...prev, c]);
       setNewComment('');
       setReplyTo(null);
-      onUpdated({ ...task, _count: { comments: (task._count?.comments || 0) + 1 } }, 'Comment added successfully');
+      onUpdated({ ...task, _count: { comments: (task._count?.comments || 0) + 1, subtasks: task._count?.subtasks || 0 } }, 'Comment added successfully');
     } catch {
       setError('Failed to add comment');
     } finally {
@@ -149,8 +160,8 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
         </div>
 
         <div className="flex border-b border-slate-300 dark:border-slate-700 px-6 shrink-0">
-          {(['DETAILS', 'COMMENTS'] as const)
-            .filter(tab => currentUserRole === 'ADMIN' || tab === 'COMMENTS')
+          {(['DETAILS', 'SUBTASKS', 'COMMENTS'] as const)
+            .filter(tab => currentUserRole === 'ADMIN' || tab === 'COMMENTS' || tab === 'SUBTASKS')
             .map(tab => (
             <button
               key={tab}
@@ -159,6 +170,7 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
             >
               {tab.charAt(0) + tab.slice(1).toLowerCase()}
               {tab === 'COMMENTS' && task._count?.comments ? ` (${task._count.comments})` : ''}
+              {tab === 'SUBTASKS' && task._count?.subtasks ? ` (${task._count.subtasks})` : ''}
             </button>
           ))}
         </div>
@@ -213,6 +225,14 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
                 </select>
               </div>
             </form>
+          )}
+
+          {activeTab === 'SUBTASKS' && (
+            <SubtasksView 
+              taskId={task.id}
+              projectId={task.project.id}
+              statuses={statuses}
+            />
           )}
 
           {activeTab === 'COMMENTS' && (

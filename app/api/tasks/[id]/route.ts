@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateTask, deleteTask } from '@/lib/services/taskService';
+import { getTaskWithStats, updateTask, deleteTask } from '@/lib/services/taskService';
 import { updateTaskSchema } from '@/lib/validators/taskValidator';
+
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const { id } = params;
+    const task = await getTaskWithStats(id);
+
+    if (!task) {
+      return NextResponse.json({ success: false, error: 'Task not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, data: task });
+  } catch (error: any) {
+    console.error('[GET /api/tasks/[id]]', error);
+    return NextResponse.json({ success: false, error: error.message || 'Internal server error' }, { status: 500 });
+  }
+}
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -18,13 +34,20 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ success: false, error: parsed.error.issues[0].message }, { status: 400 });
     }
 
-    const task = await updateTask(id, parsed.data, userId);
+    try {
+      const task = await updateTask(id, parsed.data, userId);
 
-    if (!task) {
-      return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
+      if (!task) {
+        return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
+      }
+
+      return NextResponse.json({ success: true, data: task });
+    } catch (error: any) {
+      if (error.message === 'CIRCULAR_REFERENCE') {
+        return NextResponse.json({ success: false, error: 'Cannot move — this would create a circular task hierarchy.' }, { status: 422 });
+      }
+      throw error;
     }
-
-    return NextResponse.json({ success: true, data: task });
   } catch (error: any) {
     console.error('[PATCH /api/tasks/[id]]', error);
     return NextResponse.json({ success: false, error: error.message || 'Internal server error' }, { status: 500 });

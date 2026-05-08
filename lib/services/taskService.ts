@@ -5,6 +5,30 @@ const TASK_INCLUDE = {
   creator: { select: { id: true, email: true, role: true } },
   assignee: { select: { id: true, email: true, role: true } },
   project: { select: { id: true, name: true } },
+  status: { select: { id: true, name: true, category: true, color: true } },
+  _count: { select: { subtasks: true, comments: true } },
+  subtasks: {
+    select: {
+      id: true,
+      isCompleted: true,
+      status: { select: { category: true } }
+    }
+  }
+};
+
+const formatTaskWithStats = (task: any) => {
+  const totalSubtasks = task.subtasks?.length || 0;
+  const completedSubtasks = task.subtasks?.filter((s: any) => s.status?.category === 'done').length || 0;
+  const completionPercentage = totalSubtasks > 0 ? Math.round((completedSubtasks / totalSubtasks) * 100) : 0;
+  
+  return {
+    ...task,
+    subtaskCount: totalSubtasks,
+    completedSubtaskCount: completedSubtasks,
+    completionPercentage,
+    subtasks: task.subtasks?.some((s: any) => s.title) ? task.subtasks : undefined 
+    // Keep subtasks if they have titles (means they were fetched fully), otherwise remove
+  };
 };
 
 export const getTasks = async (filters: {
@@ -51,11 +75,13 @@ export const getTasks = async (filters: {
     where.isCompleted = false;
   }
 
-  return await prisma.task.findMany({
+  const tasks = await prisma.task.findMany({
     where,
     orderBy: { createdAt: 'desc' },
     include: TASK_INCLUDE
   });
+
+  return tasks.map(formatTaskWithStats);
 };
 
 export const getTasksDueSoon = async (days: number) => {
@@ -103,11 +129,15 @@ export const createTask = async (data: any, userId: string) => {
         dueDate: data.due_date ? new Date(data.due_date) : null,
         assigneeId: data.assignee_id,
         projectId: data.project_id,
+        parentTaskId: data.parent_task_id,
+        depth: data.parent_task_id ? (await tx.task.findUnique({ where: { id: data.parent_task_id }, select: { depth: true } }))?.depth! + 1 : 0,
+        orderIndex: (await tx.task.count({ where: { parentTaskId: data.parent_task_id || null } })),
         createdBy: userId
       },
       include: TASK_INCLUDE
     });
 
+    // ... activity log and notification ...
     await tx.activityLog.create({
       data: {
         taskId: task.id,
@@ -127,7 +157,7 @@ export const createTask = async (data: any, userId: string) => {
       });
     }
 
-    return task;
+    return formatTaskWithStats(task);
   });
 };
 
@@ -144,6 +174,35 @@ export const updateTask = async (id: string, data: any, userId: string) => {
     if (data.due_date !== undefined) updatedData.dueDate = data.due_date ? new Date(data.due_date) : null;
     if (data.assignee_id !== undefined) updatedData.assigneeId = data.assignee_id;
     if (data.project_id !== undefined) updatedData.projectId = data.project_id;
+
+    if (data.parent_task_id !== undefined && data.parent_task_id !== oldTask.parentTaskId) {
+      if (data.parent_task_id) {
+        // Circular reference check
+        if (data.parent_task_id === id) throw new Error('CIRCULAR_REFERENCE');
+        let curr = data.parent_task_id;
+        while (curr) {
+          const p = await tx.task.findUnique({ where: { id: curr }, select: { parentTaskId: true } });
+          if (p?.parentTaskId === id) throw new Error('CIRCULAR_REFERENCE');
+          curr = p?.parentTaskId || null;
+        }
+
+        const newParent = await tx.task.findUnique({ where: { id: data.parent_task_id }, select: { depth: true, projectId: true } });
+        if (!newParent) throw new Error('Parent task not found');
+        if (newParent.projectId !== (data.project_id || oldTask.projectId)) throw new Error('Parent task must be in the same project');
+        
+        updatedData.parentTaskId = data.parent_task_id;
+        updatedData.depth = newParent.depth + 1;
+      } else {
+        updatedData.parentTaskId = null;
+        updatedData.depth = 0;
+      }
+      
+      // Update descendants depth if depth changed
+      if (updatedData.depth !== oldTask.depth) {
+        const depthDiff = updatedData.depth - oldTask.depth;
+        await updateDescendantsDepth(tx, id, depthDiff);
+      }
+    }
 
     // Check if new status category is 'done'
     if (data.statusId && data.statusId !== oldTask.statusId) {
@@ -199,7 +258,7 @@ export const updateTask = async (id: string, data: any, userId: string) => {
       });
     }
 
-    return task;
+    return formatTaskWithStats(task);
   });
 };
 
@@ -243,4 +302,96 @@ export const deleteTask = async (id: string, userId: string) => {
 
     return await tx.task.delete({ where: { id } });
   });
+};
+
+async function updateDescendantsDepth(tx: any, parentId: string, diff: number) {
+  const children = await tx.task.findMany({ where: { parentTaskId: parentId }, select: { id: true } });
+  for (const child of children) {
+    await tx.task.update({
+      where: { id: child.id },
+      data: { depth: { increment: diff } }
+    });
+    await updateDescendantsDepth(tx, child.id, diff);
+  }
+}
+
+export const getSubtasks = async (taskId: string, recursive: boolean = false) => {
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    include: {
+      subtasks: {
+        orderBy: { orderIndex: 'asc' },
+        include: {
+          status: { select: { id: true, name: true, category: true, color: true } },
+          assignee: { select: { id: true, email: true } },
+          _count: { select: { subtasks: true } }
+        }
+      }
+    }
+  });
+
+  if (!task) return null;
+
+  if (!recursive) return task.subtasks;
+
+  // For recursive, we need to build the tree. 
+  // This is a simple implementation that might be slow for very deep trees.
+  // But for typical task hierarchies, it should be fine.
+  const buildTree = async (tasks: any[]): Promise<any[]> => {
+    const tree = [];
+    for (const t of tasks) {
+      const children = await prisma.task.findMany({
+        where: { parentTaskId: t.id },
+        orderBy: { orderIndex: 'asc' },
+        include: {
+          status: { select: { id: true, name: true, category: true, color: true } },
+          assignee: { select: { id: true, email: true } },
+          _count: { select: { subtasks: true } }
+        }
+      });
+      tree.push({
+        ...t,
+        subtasks: children.length > 0 ? await buildTree(children) : []
+      });
+    }
+    return tree;
+  };
+
+  return await buildTree(task.subtasks);
+};
+
+export const reorderSubtasks = async (parentTaskId: string, orderedIds: string[], userId: string) => {
+  return await prisma.$transaction(async (tx) => {
+    for (let i = 0; i < orderedIds.length; i++) {
+      await tx.task.update({
+        where: { id: orderedIds[i], parentTaskId },
+        data: { orderIndex: i }
+      });
+    }
+    
+    await tx.activityLog.create({
+      data: {
+        taskId: parentTaskId,
+        userId,
+        actionType: ActionType.UPDATED,
+        detail: `Reordered subtasks: ${orderedIds.join(', ')}`
+      }
+    });
+
+    return true;
+  });
+};
+
+export const getTaskWithStats = async (id: string) => {
+  const task = await prisma.task.findUnique({
+    where: { id },
+    include: {
+      ...TASK_INCLUDE,
+      status: { select: { id: true, name: true, category: true, color: true } },
+    }
+  });
+
+  if (!task) return null;
+
+  return formatTaskWithStats(task);
 };

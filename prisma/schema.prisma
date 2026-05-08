@@ -54,6 +54,11 @@ model Task {
   priority    Priority @default(LOW)
   projectId   String
   project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parentTaskId String?
+  parentTask   Task?   @relation("Subtasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  subtasks     Task[]  @relation("Subtasks")
+  depth        Int     @default(0)
+  orderIndex   Int     @default(0)
   createdBy   String
   creator     User    @relation("TaskCreator", fields: [createdBy], references: [id])
   assigneeId  String?

@@ -20,7 +20,10 @@ interface Task {
   assignee: User | null;
   creator: User;
   project: { id: string; name: string };
-  _count?: { comments: number };
+  _count?: { comments: number; subtasks: number };
+  subtaskCount?: number;
+  completedSubtaskCount?: number;
+  completionPercentage?: number;
 }
 
 interface Status {
@@ -189,7 +192,25 @@ export default function TaskCard({ task, statuses, currentUserId, currentUserRol
             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
               📁 {task.project.name}
             </span>
+            {(task.subtaskCount ?? task._count?.subtasks ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {task.completedSubtaskCount ?? 0}/{(task.subtaskCount ?? task._count?.subtasks ?? 0)}
+              </span>
+            )}
           </div>
+
+          {/* Subtask Progress Bar */}
+          {(task.subtaskCount ?? task._count?.subtasks ?? 0) > 0 && (
+            <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 mb-3 overflow-hidden">
+              <div 
+                className="bg-emerald-500 h-full transition-all duration-500 ease-out"
+                style={{ width: `${task.completionPercentage ?? 0}%` }}
+              />
+            </div>
+          )}
 
 
           {/* Priority & Due Date */}

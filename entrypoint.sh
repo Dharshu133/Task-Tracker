@@ -2,7 +2,7 @@
 set -e
 
 echo "Running database migrations..."
-./node_modules/.bin/prisma db push --accept-data-loss
+./node_modules/.bin/prisma db push --force-reset
 
 echo "Seeding admin account..."
 # Use the compiled seed.js instead of ts-node which is not available in production

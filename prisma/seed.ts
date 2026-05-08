@@ -37,6 +37,46 @@ async function main() {
 
 
 
+  // Default Project
+  const project = await prisma.project.upsert({
+    where: { id: 'project-default-001' },
+    update: {},
+    create: {
+      id: 'project-default-001',
+      name: 'Welcome Project',
+      orgId: org.id,
+      statuses: {
+        create: [
+          { 
+            name: 'To Do', 
+            color: '#6B7280', 
+            category: 'todo', 
+            orderIndex: 0, 
+            isDefault: true, 
+            createdBy: admin.id 
+          },
+          { 
+            name: 'In Progress', 
+            color: '#3B82F6', 
+            category: 'in_progress', 
+            orderIndex: 1, 
+            isDefault: true, 
+            createdBy: admin.id 
+          },
+          { 
+            name: 'Done', 
+            color: '#10B981', 
+            category: 'done', 
+            orderIndex: 2, 
+            isDefault: true, 
+            createdBy: admin.id 
+          },
+        ]
+      }
+    },
+  });
+  console.log(`✅ Project: ${project.name}`);
+
   console.log('\n🎉 Seed complete!');
   console.log('   Admin login:  admin@acme.com / password123');
 }

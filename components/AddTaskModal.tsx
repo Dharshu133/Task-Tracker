@@ -90,10 +90,10 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
     >
       <div className="glass-card w-full max-w-lg flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-300">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border/40 shrink-0">
+        <div className="flex items-center justify-between px-6 py-3 border-b border-border/40 shrink-0">
           <div>
-            <h2 className="text-xl font-extrabold text-foreground tracking-tight">Create New Task</h2>
-            <p className="text-muted-foreground text-xs font-medium mt-0.5">Fill in the details to track a new item</p>
+            <h2 className="text-lg font-extrabold text-foreground tracking-tight">Create New Task</h2>
+            <p className="text-muted-foreground text-[10px] font-medium mt-0">Fill in the details to track a new item</p>
           </div>
           <button
             onClick={onClose}
@@ -107,23 +107,23 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
         </div>
 
         {/* Body */}
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 flex-1" noValidate>
+        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-3 flex-1 overflow-y-auto custom-scrollbar" noValidate>
           {error && (
-            <div role="alert" className="bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold px-4 py-3 rounded-xl animate-shake">
+            <div role="alert" className="bg-destructive/10 border border-destructive/20 text-destructive text-[10px] font-bold px-4 py-2 rounded-xl animate-shake">
               {error}
             </div>
           )}
 
           {/* Title */}
           <div>
-            <label htmlFor="task-title" className="label">Title</label>
+            <label htmlFor="task-title" className="label mb-1">Title</label>
             <input
               id="task-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="What needs to be done?"
-              className="input-field"
+              className="input-field py-1.5"
               disabled={loading}
               autoFocus
             />
@@ -131,27 +131,27 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
 
           {/* Description */}
           <div>
-            <label htmlFor="task-description" className="label">Description</label>
+            <label htmlFor="task-description" className="label mb-1">Description</label>
             <textarea
               id="task-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Provide more context (optional)..."
               rows={2}
-              className="input-field resize-none py-2"
+              className="input-field resize-none py-1.5"
               disabled={loading}
             />
           </div>
 
           {/* Priority & Due Date */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="task-priority" className="label">Priority</label>
+              <label htmlFor="task-priority" className="label mb-0.5">Priority</label>
               <select
                 id="task-priority"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as any)}
-                className="select-field py-2"
+                className="select-field py-1.5"
                 disabled={loading}
               >
                 <option value="LOW">Low</option>
@@ -161,28 +161,28 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
               </select>
             </div>
             <div>
-              <label htmlFor="task-due-date" className="label">Due Date</label>
+              <label htmlFor="task-due-date" className="label mb-0.5">Due Date</label>
               <input
                 id="task-due-date"
                 type="date"
                 value={dueDate}
                 min={new Date().toISOString().split('T')[0]}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="input-field py-2"
+                className="input-field py-1.5"
                 disabled={loading}
               />
             </div>
           </div>
 
           {/* Project & Status */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="task-project" className="label">Project</label>
+              <label htmlFor="task-project" className="label mb-0.5">Project</label>
               <select
                 id="task-project"
                 value={projectId}
                 onChange={(e) => setProjectId(e.target.value)}
-                className="select-field py-2"
+                className="select-field py-1.5"
               >
                 {projects.length === 0 && <option value="">No projects</option>}
                 {projects.map((p) => (
@@ -192,12 +192,12 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
             </div>
 
             <div>
-              <label htmlFor="task-status" className="label">Status</label>
+              <label htmlFor="task-status" className="label mb-0.5">Status</label>
               <select
                 id="task-status"
                 value={statusId}
                 onChange={(e) => setStatusId(e.target.value)}
-                className="select-field py-2"
+                className="select-field py-1.5"
                 disabled={loading || fetchingStatuses}
               >
                 {statuses.map((s) => (
@@ -209,12 +209,12 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
 
           {/* Assignee */}
           <div>
-            <label htmlFor="task-assignee" className="label">Assignee</label>
+            <label htmlFor="task-assignee" className="label mb-0.5">Assignee</label>
             <select
               id="task-assignee"
               value={assigneeId}
               onChange={(e) => setAssigneeId(e.target.value)}
-              className="select-field py-2"
+              className="select-field py-1.5"
               disabled={loading}
             >
               <option value="">Unassigned</option>
@@ -226,11 +226,11 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
         </form>
 
         {/* Footer */}
-        <div className="px-6 py-5 border-t border-border/40 flex gap-4 shrink-0">
+        <div className="px-6 py-4 border-t border-border/40 flex gap-3 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="btn-ghost flex-1 h-11"
+            className="btn-ghost flex-1 h-10 text-xs font-bold"
             disabled={loading}
           >
             Cancel
@@ -242,7 +242,7 @@ export default function AddTaskModal({ projects, orgUsers, currentUserRole, onCl
               const form = e.currentTarget.closest('.glass-card')?.querySelector('form') as HTMLFormElement;
               if (form) form.requestSubmit();
             }}
-            className="btn-primary flex-1 h-11"
+            className="btn-primary flex-1 h-10 text-xs font-bold"
             disabled={loading}
           >
             {loading ? 'Creating…' : 'Create Task'}

@@ -125,9 +125,9 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
       <div className="glass-card w-full max-w-3xl flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-300">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border/40 shrink-0">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+        <div className="flex items-center justify-between px-6 py-3 border-b border-border/40 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
@@ -151,7 +151,7 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-6 py-4 text-xs font-black uppercase tracking-widest border-b-2 transition-all ${activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+              className={`px-5 py-3 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all ${activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
             >
               {tab}
               {tab === 'COMMENTS' && task._count?.comments ? <span className="ml-2 opacity-50">({task._count.comments})</span> : ''}
@@ -163,23 +163,23 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
         {/* Body */}
         <div className="flex-1 overflow-hidden flex flex-col">
           {activeTab === 'DETAILS' && (
-            <form id="edit-form" onSubmit={handleUpdateDetails} className="px-6 py-5 space-y-4 flex-1" noValidate>
-              {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg">{error}</div>}
+            <form id="edit-form" onSubmit={handleUpdateDetails} className="px-5 py-4 space-y-3 flex-1 overflow-y-auto custom-scrollbar" noValidate>
+              {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-2 rounded-lg">{error}</div>}
               
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div>
-                  <label className="label">Title <span className="text-red-400">*</span></label>
-                  <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="input-field" disabled={loading} />
+                  <label className="label mb-1">Title <span className="text-red-400">*</span></label>
+                  <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="input-field py-1.5" disabled={loading} />
                 </div>
                  <div>
-                  <label className="label">Description</label>
-                  <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="input-field resize-none py-2" disabled={loading} />
+                  <label className="label mb-1">Description</label>
+                  <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="input-field resize-none py-1.5" disabled={loading} />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="label">Priority</label>
-                    <select value={priority} onChange={e => setPriority(e.target.value as any)} className="select-field" disabled={loading}>
+                    <label className="label mb-0.5">Priority</label>
+                    <select value={priority} onChange={e => setPriority(e.target.value as any)} className="select-field py-1.5" disabled={loading}>
                       <option value="LOW" className="bg-white dark:bg-slate-900">Low</option>
                       <option value="MEDIUM" className="bg-white dark:bg-slate-900">Medium</option>
                       <option value="HIGH" className="bg-white dark:bg-slate-900">High</option>
@@ -187,14 +187,14 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
                     </select>
                   </div>
                   <div>
-                    <label className="label">Due Date</label>
-                    <input type="date" value={dueDate} min={new Date().toISOString().split('T')[0]} onChange={e => setDueDate(e.target.value)} className="input-field py-2" disabled={loading} />
+                    <label className="label mb-0.5">Due Date</label>
+                    <input type="date" value={dueDate} min={new Date().toISOString().split('T')[0]} onChange={e => setDueDate(e.target.value)} className="input-field py-1.5" disabled={loading} />
                   </div>
                 </div>
 
                 <div>
-                  <label className="label">Status</label>
-                  <select value={statusId} onChange={e => setStatusId(e.target.value)} className="select-field" disabled={loading || fetchingStatuses}>
+                  <label className="label mb-0.5">Status</label>
+                  <select value={statusId} onChange={e => setStatusId(e.target.value)} className="select-field py-1.5" disabled={loading || fetchingStatuses}>
                     {statuses.map(s => (
                       <option key={s.id} value={s.id} className="bg-white dark:bg-slate-900">{s.name}</option>
                     ))}
@@ -202,8 +202,8 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
                 </div>
 
                 <div>
-                  <label className="label">Assignee</label>
-                  <select value={assigneeId} onChange={e => setAssigneeId(e.target.value)} className="select-field" disabled={loading}>
+                  <label className="label mb-0.5">Assignee</label>
+                  <select value={assigneeId} onChange={e => setAssigneeId(e.target.value)} className="select-field py-1.5" disabled={loading}>
                     <option value="" className="bg-white dark:bg-slate-900">Unassigned</option>
                     {filteredUsers.map(u => (
                       <option key={u.id} value={u.id} className="bg-white dark:bg-slate-900">@{u.email.split('@')[0]}</option>
@@ -308,9 +308,9 @@ export default function EditTaskModal({ task, orgUsers, currentUserRole, onClose
 
         {/* Footer */}
         {activeTab === 'DETAILS' && (
-          <div className="px-6 py-5 border-t border-border/40 flex gap-4 shrink-0">
-            <button type="button" onClick={onClose} className="btn-ghost flex-1 h-11" disabled={loading}>Cancel</button>
-            <button type="submit" form="edit-form" className="btn-primary flex-1 h-11" disabled={loading}>
+          <div className="px-6 py-4 border-t border-border/40 flex gap-3 shrink-0">
+            <button type="button" onClick={onClose} className="btn-ghost flex-1 h-10 text-xs" disabled={loading}>Cancel</button>
+            <button type="submit" form="edit-form" className="btn-primary flex-1 h-10 text-xs" disabled={loading}>
               {loading ? 'Saving Changes...' : 'Update Task'}
             </button>
           </div>
